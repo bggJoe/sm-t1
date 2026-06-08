@@ -1,0 +1,73 @@
+direction: down
+
+# cross-cutting-jwt.d2
+# JWT filter chain 的攔截行為圖
+# 屬於 security 模組的內部設計，不屬於任何業務 SLICE
+# 變更時機：SecurityFilterChain 配置改變時（與業務 SLICE 無關）
+#
+# PUBLIC 路徑宣告機制（Q2 決策）：
+#   預設全部保護。各模組實作 PublicPathContributor 介面宣告例外路徑，
+#   SecurityConfig 啟動時收集所有 contributor 並建立 filter chain。
+
+public_path_declaration: "PUBLIC 路徑宣告機制" {
+  style.fill: "#f0f0f0"
+  style.stroke: "#999"
+
+  contributor_interface: "PublicPathContributor [security 模組 / 公開介面]\n各模組實作此介面宣告自己的 PUBLIC 路徑" {
+    style.fill: "#d4edda"
+    style.stroke-dash: 5
+  }
+
+  registration_contributor: "registration 模組\nimplements PublicPathContributor\n→ [POST /registrations]" {
+    style.fill: "#fff8e6"
+  }
+
+  admin_contributor: "admin 模組\nimplements PublicPathContributor\n→ [POST /auth/login]" {
+    style.fill: "#fffbe6"
+  }
+
+  security_config: "SecurityConfig [security 模組]\n收集所有 PublicPathContributor\n建立 SecurityFilterChain" {
+    style.fill: "#d4edda"
+  }
+
+  registration_contributor -> contributor_interface: "宣告"
+  admin_contributor -> contributor_interface: "宣告"
+  contributor_interface -> security_config: "啟動時收集"
+}
+
+http_request: "HTTP Request\n(任何路徑)" {
+  shape: rectangle
+  style.fill: "#f5f5f5"
+}
+
+filter_chain: "JwtAuthFilter (security 模組)" {
+  style.fill: "#f0f0f0"
+  style.stroke: "#999"
+
+  check: "① 路徑在 PUBLIC 清單？"
+  verify: "② 驗證 JWT\n(簽章 + exp + iat)"
+  context: "③ 寫入 SecurityContextHolder"
+}
+
+public_result: "放行到 Controller\n(無 Authentication)" {
+  style.fill: "#ffe8e8"
+  style.stroke-dash: 3
+}
+
+protected_result: "放行到 Controller\n(Authentication 已設定)" {
+  style.fill: "#fff8e6"
+  style.stroke-dash: 3
+}
+
+error_response: "401 Unauthorized / 403 Forbidden" {
+  style.fill: "#f8d7da"
+}
+
+public_path_declaration.security_config -> filter_chain: "啟動時注入 PUBLIC 路徑清單"
+http_request -> filter_chain.check
+filter_chain.check -> public_result: "是 PUBLIC 路徑"
+filter_chain.check -> filter_chain.verify: "非 PUBLIC 路徑"
+filter_chain.verify -> filter_chain.context: "驗證成功"
+filter_chain.verify -> error_response: "驗證失敗"
+filter_chain.context -> protected_result
+

@@ -1,0 +1,71 @@
+direction: down
+
+vars: {
+  d2-config: {
+    layout-engine: elk
+  }
+}
+
+presentation: {
+  label: "Presentation Layer"
+  style.fill: "#f0f4ff"
+
+  RegistrationForm: {
+    label: "RegistrationForm\n(Angular Component)"
+    shape: rectangle
+  }
+
+  RegistrationController: {
+    label: "[PUBLIC - no auth]\nRegistrationController\n(REST, POST /registrations)"
+    shape: rectangle
+    style.fill: "#ffe8e8"
+  }
+}
+
+application: {
+  label: "Application Layer"
+  style.fill: "#fff8e6"
+
+  RegistrationApplicationService: {
+    label: "RegistrationApplicationService\n(Application Service)"
+    shape: rectangle
+  }
+
+  AccountExistencePort: {
+    label: "AccountExistencePort\n(Interface / SEAM → future Account module)"
+    shape: rectangle
+    style.stroke-dash: 5
+  }
+}
+
+domain: {
+  label: "Domain Layer"
+  style.fill: "#f9f0ff"
+  style.stroke-dash: 3
+
+  note: {
+    label: "Empty for SLICE-001\nStatus invariant (INV-002) enforced\nby Application Service as interim owner.\nDomain objects extracted when rules grow."
+    shape: text
+  }
+}
+
+infrastructure: {
+  label: "Infrastructure Layer"
+  style.fill: "#f0fff4"
+
+  RegistrationApplicationRepository: {
+    label: "RegistrationApplicationRepository\n(JPA Repository)"
+    shape: rectangle
+  }
+
+  registration_application: {
+    label: "registration_application\n(DB Table: email, name, status, created_at)"
+    shape: cylinder
+  }
+}
+
+presentation.RegistrationForm -> presentation.RegistrationController: "POST /registrations\n(HTTP, no auth, JSON body)"
+presentation.RegistrationController -> application.RegistrationApplicationService: "submitApplication(cmd)"
+application.RegistrationApplicationService -> application.AccountExistencePort: "hasApprovedAccount(email)"
+application.RegistrationApplicationService -> infrastructure.RegistrationApplicationRepository: "findPendingByEmail(email)\nsave(application)"
+infrastructure.RegistrationApplicationRepository -> infrastructure.registration_application: "JPA"

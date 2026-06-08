@@ -1,0 +1,355 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// SM-T1 Architecture — LikeC4 Sandbox
+// 目的：驗證 LikeC4 specification flexibility 是否比 Structurizr 更適合本專案
+//
+// 驗證三件事：
+//   1. element kind 直接對應模組概念，不翻譯成 C4 詞彙
+//   2. 同一 model，兩種視角：C4-style（consultant）& 模組拓撲（開發）
+//   3. Module Topology view 的 relationship auto-aggregation
+// ─────────────────────────────────────────────────────────────────────────────
+
+specification {
+
+  // ── C4 主軸（L1/L2/L3）─────────────────────────────────────────────────
+  element actor {
+    style {
+      shape person
+      color secondary
+    }
+  }
+
+  element system {
+    style {
+      color primary
+    }
+  }
+
+  element container {
+    style {
+      color blue
+    }
+  }
+
+  // L3：module 取代 C4 的 component，語意保真（DEC-020）
+  element module {
+    style {
+      color green
+    }
+  }
+
+  // ── 模組內部結構（只在 Port/Adapter/HTTP surface view 出現）───────────────
+  element usecase {
+    // 跨模組公開 API（module root package）
+    style {
+      color green
+    }
+  }
+
+  element port {
+    // SEAM / Extension Point interface
+    style {
+      color amber
+    }
+  }
+
+  element adapter {
+    // Port 的實作
+    style {
+      color amber
+    }
+  }
+
+  element controller {
+    // HTTP 入口點
+    style {
+      color red
+    }
+  }
+
+  element service {
+    // Application / Domain service（模組內部）
+  }
+
+  // ── Relationship 種類────────────────────────────────────────────────────
+  relationship implements {
+    color amber
+    line dashed
+  }
+
+  relationship calls {
+    color secondary
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MODEL
+// ─────────────────────────────────────────────────────────────────────────────
+model {
+
+  visitor = actor 'Visitor' {
+    description 'Unregistered user submitting a registration application'
+  }
+
+  admin = actor 'Admin' {
+    description 'Administrator who reviews applications and provisions accounts'
+  }
+
+  // ── L1: System ────────────────────────────────────────────────────────────
+  sm = system 'SM-T1 System' {
+    description 'Spring Boot 3.5 + Spring Modulith 1.3; four bounded modules demonstrating module boundary architecture methodology'
+
+    // ── L2: Containers ───────────────────────────────────────────────────
+    frontend = container 'Angular SPA' {
+      description 'Angular 20 frontend (not yet implemented)'
+      style {
+        opacity 30%
+      }
+    }
+
+    backend = container 'Spring Boot Backend' {
+      description 'Java 21 / Spring Boot 3.5.13 / Spring Modulith 1.3.12; module boundaries enforced by Modulith verifier + ArchUnit'
+
+      // ── L3: registration module ─────────────────────────────────────
+      registration = module 'Registration Module' {
+        description 'Handles visitor registration applications: submit → PENDING → APPROVED/REJECTED. Owns INV-001~010.'
+
+        // Public API (root package, DEC-020)
+        list_pending_uc = usecase 'ListPendingApplicationsUseCase' {
+          description 'Cross-module API: list PENDING applications for admin review'
+        }
+        review_uc = usecase 'ReviewApplicationUseCase' {
+          description 'Cross-module API: approve or reject a PENDING application (INV-008/009/010)'
+        }
+        account_existence_port = port 'AccountExistencePort' {
+          description 'SEAM-001: queries whether email has an approved account. Defined in registration root; implemented by account module.'
+        }
+
+        // Internal
+        reg_controller = controller 'RegistrationController' {
+          description 'POST /registrations [PUBLIC — no auth required]'
+        }
+        reg_service = service 'RegistrationApplicationService' {
+          description 'Implements ListPending + Review UseCases; enforces INV-001~010'
+        }
+        reg_pub_path_adapter = adapter 'RegistrationPublicPathContributor' {
+          description 'Declares POST /registrations as PUBLIC to security module (DEC-015)'
+        }
+
+        // Internal relationships
+        reg_controller -> reg_service 'submitApplication(cmd)'
+        reg_service -> account_existence_port 'hasApprovedAccount(email)'
+        reg_service -[implements]-> list_pending_uc
+        reg_service -[implements]-> review_uc
+      }
+
+      // ── L3: admin module ────────────────────────────────────────────
+      admin_mod = module 'Admin Module' {
+        description 'Admin Portal: thin HTTP adapter + admin auth. DEC-019/021. Depends on registration + account + security.'
+
+        // HTTP surface
+        auth_ctrl = controller 'AdminAuthController' {
+          description 'POST /auth/login [PUBLIC — declared by AdminPublicPathContributor]'
+        }
+        app_ctrl = controller 'AdminApplicationController' {
+          description 'GET /admin/applications, PATCH /admin/applications/{id}/review [JWT protected]'
+        }
+
+        // Application services (internal)
+        app_svc = service 'AdminApplicationService' {
+          description 'Coordinates two-stage account provisioning (DEC-021): Stage1 review (Tx#1) + Stage2 create (Tx#2). No business rules.'
+        }
+        auth_svc = service 'AdminAuthService' {
+          description 'Validates admin credentials (BCrypt), delegates JWT issuance to security module'
+        }
+        admin_pub_path_adapter = adapter 'AdminPublicPathContributor' {
+          description 'Declares POST /auth/login as PUBLIC to security module (DEC-015)'
+        }
+
+        // Internal relationships
+        app_ctrl -> app_svc 'approveAndProvisionAccount(id, reviewer)'
+        auth_ctrl -> auth_svc 'authenticate(cmd)'
+      }
+
+      // ── L3: account module ──────────────────────────────────────────
+      account_mod = module 'Account Module' {
+        description 'Manages Account lifecycle. SEAM-001 real implementation fills AccountExistencePort. Owns INV-011~014.'
+
+        // Public API
+        create_account_uc = usecase 'CreateAccountUseCase' {
+          description 'Cross-module API: create ACTIVE account with BCrypt-hashed default password (INV-011/012/013)'
+        }
+
+        // Adapter (SEAM-001 fill)
+        jpa_existence_adapter = adapter 'JpaAccountExistenceAdapter' {
+          description 'SEAM-001 real implementation: implements AccountExistencePort by querying accounts table (INV-014)'
+        }
+      }
+
+      // ── L3: security module ─────────────────────────────────────────
+      security_mod = module 'Security Module' {
+        description 'Cross-cutting security infrastructure: JWT lifecycle, filter chain, public path registry (DEC-015)'
+
+        jwt_provider = service 'JwtTokenProvider' {
+          description 'Issues JWT (sub/iat/exp) and validates tokens; only public API of security module'
+        }
+        public_path_port = port 'PublicPathContributor' {
+          description 'Extension point: each module implements to declare its own PUBLIC endpoints. SecurityConfig collects all at startup.'
+        }
+        security_config = service 'SecurityConfig' {
+          description 'Collects all PublicPathContributors, configures Spring Security filter chain; all paths protected by default'
+        }
+
+        // Internal relationships
+        security_config -> public_path_port 'collects all contributors at startup'
+      }
+
+      // ── Cross-module relationships (defined at backend level) ────────
+      // admin → registration
+      admin_mod.app_svc -> registration.review_uc 'Stage 1: review(id, APPROVE, reviewer) [Tx #1]'
+      admin_mod.app_svc -> registration.list_pending_uc 'findById(id) — email lookup before Stage 2'
+      // admin → account
+      admin_mod.app_svc -> account_mod.create_account_uc 'Stage 2: create(email) [Tx #2]'
+      // admin → security
+      admin_mod.auth_svc -> security_mod.jwt_provider 'issueToken(username)'
+      // account → registration (SEAM-001)
+      account_mod.jpa_existence_adapter -[implements]-> registration.account_existence_port
+      // registration → security (PublicPathContributor)
+      registration.reg_pub_path_adapter -[implements]-> security_mod.public_path_port
+      // admin → security (PublicPathContributor)
+      admin_mod.admin_pub_path_adapter -[implements]-> security_mod.public_path_port
+      // Actor → Controller 直接關係（供 http_surface view 顯示 actor 連線）
+      visitor -> registration.reg_controller 'POST /registrations [PUBLIC]'
+      admin -> admin_mod.auth_ctrl 'POST /auth/login [PUBLIC]'
+      admin -> admin_mod.app_ctrl 'GET/PATCH /admin/applications [JWT]'
+    }
+
+    db = container 'PostgreSQL 17' {
+      description 'Persistent store: registration_applications, admin_credentials, accounts tables'
+      style {
+        shape storage
+      }
+    }
+  }
+
+  // ── L1 relationships ────────────────────────────────────────────────────
+  visitor -> sm 'submits registration application'
+  admin -> sm 'reviews applications, provisions accounts'
+
+  // ── L2 relationships ────────────────────────────────────────────────────
+  visitor -> sm.backend 'POST /registrations (no auth)'
+  admin -> sm.backend 'POST /auth/login; GET/PATCH /admin/applications [JWT]'
+  sm.frontend -> sm.backend 'API calls'
+  sm.backend -> sm.db 'JPA / JDBC'
+
+  // ── Actor → Module relationships（供 module_topology view 顯示對外連線）──
+  visitor -> sm.backend.registration 'submits registration application'
+  admin -> sm.backend.admin_mod 'reviews applications, provisions accounts'
+
+
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VIEWS
+// ─────────────────────────────────────────────────────────────────────────────
+views {
+
+  // ── L1: System Context（給 consultant 的第一張圖）────────────────────────
+  view system_context {
+    title 'L1 · System Context'
+    description 'Who uses the system. C4 Level 1.'
+    include element.kind == actor
+    include element.kind == system
+  }
+
+  // ── L2: Container View ───────────────────────────────────────────────────
+  view container_view of sm {
+    title 'L2 · Container View'
+    description 'Backend (Spring Boot) / Frontend (Angular) / DB (PostgreSQL). C4 Level 2.'
+    include *
+  }
+
+  // ── L3: Backend internal view（等同 Structurizr component view of backend）
+  view backend_internal of sm.backend {
+    title 'L3 · Backend Internal'
+    description 'Full backend container scoped view: all modules + actors + DB. Equivalent to Structurizr component view scoped to backend container.'
+    include *
+  }
+
+  // ── L3: Module Topology (black-box)──────────────────────────────────────
+  // 驗證重點：relationships 應從內部 service→usecase 的連線自動聚合到 module 層
+  // 不需要手動 include 任何 usecase / service / adapter
+  view module_topology {
+    title 'L3 · Module Topology (black-box)'
+    description 'Cross-module dependencies auto-aggregated. No internal component exposed. Compare with Structurizr Backend-Module-Topology: that view required manual include + had AdminApplicationService inconsistency.'
+    include element.kind == actor
+    include element.kind == module
+  }
+
+  // ── Module drill-down views（點進 module 後看到完整內部）───────────────────
+  view registration_internal of sm.backend.registration {
+    title 'Registration Module · Internal'
+    include *
+  }
+
+  view admin_internal of sm.backend.admin_mod {
+    title 'Admin Module · Internal'
+    include *
+  }
+
+  view account_internal of sm.backend.account_mod {
+    title 'Account Module · Internal'
+    include *
+  }
+
+  view security_internal of sm.backend.security_mod {
+    title 'Security Module · Internal'
+    include *
+  }
+
+  // ── Port / Adapter View (SEAM-001 visible) ───────────────────────────────
+  // 驗證重點：port ←implements─ adapter 關係，自動推導
+  view ports_and_adapters {
+    title 'Port / Adapter View'
+    description 'All SEAM interfaces and their real implementations. SEAM-001: AccountExistencePort ←implements─ JpaAccountExistenceAdapter.'
+    include element.kind == port
+    include element.kind == adapter
+  }
+
+  // ── HTTP Surface View ─────────────────────────────────────────────────────
+  // 驗證重點：controller kind filter，自動帶出 actor → controller 的 relationship
+  // 每個 controller 明確 include + navigateTo，點擊可跳至所屬 module 的 internal view
+  // module 同步 include 作為 compound 邊界框，展現 controller 層次結構
+  view http_surface {
+    title 'HTTP Surface View'
+    description 'All HTTP entry points. PUBLIC vs JWT-protected visibility. Security audit surface.'
+    include element.kind == actor
+    include sm.backend.registration with {
+      navigateTo registration_internal
+    }
+    include sm.backend.registration.reg_controller with {
+      navigateTo registration_internal
+    }
+    include sm.backend.admin_mod with {
+      navigateTo admin_internal
+    }
+    include sm.backend.admin_mod.auth_ctrl with {
+      navigateTo admin_internal
+    }
+    include sm.backend.admin_mod.app_ctrl with {
+      navigateTo admin_internal
+    }
+  }
+
+  // ── Cross-cutting: Security ──────────────────────────────────────────────
+  view cross_cutting_security {
+    title 'Cross-cutting · Security Infrastructure'
+    description 'JWT lifecycle + PublicPathContributor extension point (DEC-015). Shows which modules declare PUBLIC endpoints.'
+    include sm.backend.security_mod
+    include sm.backend.security_mod.*
+    include sm.backend.admin_mod.auth_ctrl
+    include sm.backend.admin_mod.auth_svc
+    include sm.backend.admin_mod.admin_pub_path_adapter
+    include sm.backend.registration.reg_controller
+    include sm.backend.registration.reg_pub_path_adapter
+  }
+}

@@ -1,0 +1,60 @@
+direction: down
+
+# SLICE-002 業務 D2：Admin 登入流程
+# 範圍：帳密驗證 → JWT 簽發 → 回傳 token
+# 不在此圖：JWT filter chain 攔截行為（見 cross-cutting-jwt.d2）
+# 不在此圖：受保護端點的 JWT 驗證（→ SLICE-003，filter chain 在此生效）
+
+admin_actor: Admin {
+  shape: person
+}
+
+admin_module: "admin 模組" {
+  style.fill: "#fffbe6"
+  style.stroke: "#c8a000"
+
+  auth_controller: "AdminAuthController [Presentation / PublicEndpoint]" {
+    style.fill: "#ffe8e8"
+  }
+
+  auth_service: "AdminAuthService [Application]" {
+    style.fill: "#fff8e6"
+  }
+
+  credential_repo: "AdminCredentialRepository [Application / Port]" {
+    style.fill: "#fff8e6"
+    style.stroke-dash: 5
+  }
+
+  admin_credential: "AdminCredential [Domain / Entity]" {
+    style.fill: "#f9f0ff"
+    style.stroke-dash: 5
+  }
+}
+
+security_module: "security 模組\n[JwtTokenProvider 為唯一對外公開 API]" {
+  style.fill: "#f0f0f0"
+  style.stroke: "#999"
+
+  jwt_provider: "JwtTokenProvider [Infrastructure / 公開 API]" {
+    style.fill: "#d4edda"
+    style.stroke-dash: 5
+  }
+}
+
+db: "Database (admin_credentials table)" {
+  shape: cylinder
+  style.fill: "#f5f5f5"
+}
+
+admin_actor -> admin_module.auth_controller: "POST /auth/login\n{username, password}"
+admin_module.auth_controller -> admin_module.auth_service: "authenticate(cmd)"
+admin_module.auth_service -> admin_module.credential_repo: "findByUsername(username)"
+admin_module.credential_repo -> db: "JPA / JDBC"
+admin_module.admin_credential -> admin_module.credential_repo
+admin_module.auth_service -> security_module.jwt_provider: "issueToken(username)"
+security_module.jwt_provider -> admin_module.auth_controller: "JWT string"
+admin_module.auth_controller -> admin_actor: "200 OK {token}"
+
+admin_module.auth_service -> security_module.jwt_provider: "issueToken(username)"
+security_module.jwt_provider -> admin_module.auth_controller: "JWT string"

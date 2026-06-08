@@ -1,0 +1,33 @@
+shape: sequence_diagram
+
+# SLICE-004 業務活動流程：Admin 協調帳號建立（跨模組 Sequence View）
+# 呈現原則：每個模組是黑盒 lifeline，只顯示模組間訊息；不暴露內部元件設計
+# 對應：AC-011（審核）、AC-012（建立帳號）、AC-013（部分失敗可觀測）
+# 參照：DEC-021（兩階段分離 transaction）、INV-011~013
+
+Admin: {shape: person}
+"admin 模組": {}
+"registration 模組": {}
+"account 模組": {}
+
+# ── Scenario A：AC-011 / AC-012 兩階段全成功 ──────────────────────────────
+
+"Scenario A: AC-011+AC-012 兩階段全成功" {
+  Admin -> "admin 模組": "PATCH /admin/applications/{id}/review [APPROVE, reviewer]"
+  "admin 模組" -> "registration 模組": "Stage 1 (Tx #1): review(id, APPROVE, reviewer)"
+  "registration 模組" --> "admin 模組": "applicationStatus: APPROVED"
+  "admin 模組" -> "account 模組": "Stage 2 (Tx #2): create(email)"
+  "account 模組" --> "admin 模組": "Account created (ACTIVE, BCrypt hash)"
+  "admin 模組" --> Admin: "200 OK {applicationStatus: APPROVED, accountCreated: true}"
+}
+
+# ── Scenario B：AC-013 Stage 1 成功、Stage 2 失敗（部分失敗可觀測）──────────
+
+"Scenario B: AC-013 Stage 2 失敗，結果仍可觀測" {
+  Admin -> "admin 模組": "PATCH /admin/applications/{id}/review [APPROVE, reviewer]"
+  "admin 模組" -> "registration 模組": "Stage 1 (Tx #1): review(id, APPROVE, reviewer)"
+  "registration 模組" --> "admin 模組": "applicationStatus: APPROVED"
+  "admin 模組" -> "account 模組": "Stage 2 (Tx #2): create(email)"
+  "account 模組" --> "admin 模組": "Exception (email 重複 / DB 錯誤)"
+  "admin 模組" --> Admin: "200 OK {applicationStatus: APPROVED, accountCreated: false}"
+}

@@ -1,0 +1,131 @@
+direction: down
+
+# SLICE-004 業務 D2：Admin 協調帳號建立（跨模組兩階段流程）
+# 範圍：Admin approve 觸發帳號建立；SEAM-001 填充（Stub → Real）
+# 架構立場（DEC-019 + DEC-021）：admin 薄 Portal + 跨模組協調；兩階段分離 transaction
+# 不在此圖：JWT filter chain（見 cross-cutting-jwt.d2）；list/reject 流程（見 slice-003.d2）
+
+# ─── 主流程：Admin Approve → Stage 1 + Stage 2 ───────────────────────────────
+
+admin_actor: Admin {
+  shape: person
+}
+
+admin_module: "admin 模組 (Portal / 跨模組協調者)" {
+  style.fill: "#fffbe6"
+  style.stroke: "#c8a000"
+
+  app_controller: "AdminApplicationController [Presentation / ProtectedEndpoint]\nHTTP adapter：轉換 request → service call → HTTP response" {
+    style.fill: "#b0c4de"
+  }
+
+  app_service: "AdminApplicationService [Application]\n協調兩階段流程（Stage1 → Stage2）；處理部分失敗；不含業務規則（DEC-021）" {
+    style.fill: "#fff8e6"
+  }
+}
+
+registration_module: "registration 模組" {
+  style.fill: "#e8f4e8"
+  style.stroke: "#4a9a4a"
+
+  review_use_case: "ReviewApplicationUseCase [Application / UseCase Interface]\n(registration root — DEC-020)" {
+    style.fill: "#fff8e6"
+    style.stroke-dash: 5
+  }
+
+  app_service: "RegistrationApplicationService [Application]" {
+    style.fill: "#fff8e6"
+  }
+
+  app_entity: "RegistrationApplication [Domain / Aggregate Root]\n狀態機: PENDING → APPROVED" {
+    style.fill: "#f9f0ff"
+    style.stroke-dash: 5
+  }
+
+  app_repo: "RegistrationApplicationRepository [Application / Port]" {
+    style.fill: "#fff8e6"
+    style.stroke-dash: 5
+  }
+
+  account_existence_port: "AccountExistencePort [Application / Port — SEAM-001]\n(registration root — 跨模組可見，DEC-020 促升)" {
+    style.fill: "#ffe8cc"
+    style.stroke: "#cc6600"
+    style.stroke-dash: 5
+  }
+}
+
+account_module: "account 模組 (NEW)" {
+  style.fill: "#e8eef8"
+  style.stroke: "#3a5a9a"
+
+  create_use_case: "CreateAccountUseCase [Application / UseCase Interface]\n(account root — DEC-020)" {
+    style.fill: "#fff8e6"
+    style.stroke-dash: 5
+  }
+
+  account_service: "AccountApplicationService [Application]\n建立 Account；BCrypt encode('123456')（INV-012）" {
+    style.fill: "#fff8e6"
+  }
+
+  account_entity: "Account [Domain / Aggregate Root]\nid(UUID)・email(UNIQUE)・passwordHash・status=ACTIVE・createdAt・lastModifiedAt" {
+    style.fill: "#f9f0ff"
+    style.stroke-dash: 5
+  }
+
+  account_repo: "AccountRepository [Application / Port]" {
+    style.fill: "#fff8e6"
+    style.stroke-dash: 5
+  }
+
+  jpa_existence_adapter: "JpaAccountExistenceAdapter [Infrastructure / Adapter — SEAM-001 Real]\n取代 StubAccountExistenceAdapter；實作 AccountExistencePort" {
+    style.fill: "#cceecc"
+    style.stroke: "#338833"
+  }
+}
+
+reg_db: "Database\n(registration_applications table)" {
+  shape: cylinder
+  style.fill: "#f5f5f5"
+}
+
+account_db: "Database\n(accounts table)" {
+  shape: cylinder
+  style.fill: "#f5f5f5"
+}
+
+# ── Stage 1：審核通過（獨立 transaction）──
+
+admin_actor -> admin_module.app_controller: "PATCH /admin/applications/{id}/review\n{\"decision\": \"APPROVE\"} [Bearer JWT]"
+admin_module.app_controller -> admin_module.app_service: "approveAndProvisionAccount(id, reviewer)"
+
+admin_module.app_service -> registration_module.review_use_case: "Stage 1：review(id, APPROVE, reviewer)\n[transaction #1]"
+registration_module.review_use_case -> registration_module.app_service: "(實作)"
+registration_module.app_service -> registration_module.app_repo: "findById(id)"
+registration_module.app_service -> registration_module.app_entity: "approve(reviewedBy)"
+registration_module.app_entity -> registration_module.app_repo: "save → APPROVED"
+registration_module.app_repo -> reg_db: "JPA / JDBC"
+
+# ── Stage 2：建立帳號（獨立 transaction，Stage 1 成功後呼叫）──
+
+admin_module.app_service -> account_module.create_use_case: "Stage 2：create(email)\n[transaction #2，Stage 1 失敗則不執行]"
+account_module.create_use_case -> account_module.account_service: "(實作)"
+account_module.account_service -> account_module.account_entity: "new Account(email, BCrypt('123456'), ACTIVE)（INV-012, INV-013）"
+account_module.account_service -> account_module.account_repo: "save（email UNIQUE — INV-011）"
+account_module.account_repo -> account_db: "JPA / JDBC"
+
+# ── Response ──
+
+admin_module.app_service -> admin_module.app_controller: "ApproveResult { applicationStatus, accountCreated }"
+admin_module.app_controller -> admin_actor: "200 OK\n{ applicationStatus: APPROVED, accountCreated: true }\n---\n若 Stage 2 失敗：{ applicationStatus: APPROVED, accountCreated: false }\n（AC-012：狀態可觀測，呼叫者可獨立重試 Stage 2）"
+
+
+# ─── SEAM-001 填充：JpaAccountExistenceAdapter 取代 Stub ────────────────────
+
+seam_note: "SEAM-001 填充（本 SLICE 完成）\nStubAccountExistenceAdapter → 移除\nJpaAccountExistenceAdapter → Real implementation" {
+  style.fill: "#fff0cc"
+  style.stroke: "#cc9900"
+  style.stroke-dash: 3
+}
+
+account_module.jpa_existence_adapter -> registration_module.account_existence_port: "實作（跨模組 Port — registration 定義，account 實作）"
+account_module.jpa_existence_adapter -> account_db: "SELECT 1 FROM accounts WHERE email = ? (INV-014)"

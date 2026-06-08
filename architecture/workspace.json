@@ -1,0 +1,1337 @@
+{
+  "configuration" : { },
+  "description" : "System Module - Methodology Validation",
+  "documentation" : { },
+  "id" : 1,
+  "lastModifiedDate" : "2026-05-12T01:26:15Z",
+  "model" : {
+    "people" : [ {
+      "description" : "未持有帳號、想申請成為系統使用者",
+      "id" : "1",
+      "name" : "Visitor",
+      "properties" : {
+        "structurizr.dsl.identifier" : "visitor"
+      },
+      "relationships" : [ {
+        "description" : "填寫並送出申請",
+        "destinationId" : "5",
+        "id" : "33",
+        "sourceId" : "1",
+        "tags" : "Relationship"
+      }, {
+        "description" : "填寫並送出申請",
+        "destinationId" : "4",
+        "id" : "34",
+        "linkedRelationshipId" : "33",
+        "sourceId" : "1"
+      }, {
+        "description" : "填寫並送出申請",
+        "destinationId" : "3",
+        "id" : "35",
+        "linkedRelationshipId" : "33",
+        "sourceId" : "1"
+      }, {
+        "description" : "POST /registrations (no auth, JSON)",
+        "destinationId" : "7",
+        "id" : "40",
+        "sourceId" : "1",
+        "tags" : "Relationship",
+        "technology" : "L3 component view 直連（frontend SPA 尚未設計，在 L3 省略，L1/L2 保留 frontend 節點）"
+      }, {
+        "description" : "POST /registrations (no auth, JSON)",
+        "destinationId" : "6",
+        "id" : "41",
+        "linkedRelationshipId" : "40",
+        "sourceId" : "1",
+        "technology" : "L3 component view 直連（frontend SPA 尚未設計，在 L3 省略，L1/L2 保留 frontend 節點）"
+      } ],
+      "tags" : "Element,Person,Actor"
+    }, {
+      "description" : "管理者，負責審核申請",
+      "id" : "2",
+      "name" : "Admin",
+      "properties" : {
+        "structurizr.dsl.identifier" : "admin"
+      },
+      "relationships" : [ {
+        "description" : "POST /auth/login {username, password}",
+        "destinationId" : "18",
+        "id" : "45",
+        "sourceId" : "2",
+        "tags" : "Relationship"
+      }, {
+        "description" : "POST /auth/login {username, password}",
+        "destinationId" : "6",
+        "id" : "46",
+        "linkedRelationshipId" : "45",
+        "sourceId" : "2"
+      }, {
+        "description" : "POST /auth/login {username, password}",
+        "destinationId" : "3",
+        "id" : "47",
+        "linkedRelationshipId" : "45",
+        "sourceId" : "2"
+      }, {
+        "description" : "GET /admin/applications / PATCH /admin/applications/{id}/review [Bearer JWT]",
+        "destinationId" : "22",
+        "id" : "54",
+        "sourceId" : "2",
+        "tags" : "Relationship"
+      } ],
+      "tags" : "Element,Person,Actor"
+    } ],
+    "softwareSystems" : [ {
+      "containers" : [ {
+        "components" : [ {
+          "description" : "申請表單 Component，收集 email 與 name",
+          "documentation" : { },
+          "id" : "5",
+          "name" : "RegistrationForm",
+          "properties" : {
+            "structurizr.dsl.identifier" : "registrationForm"
+          },
+          "relationships" : [ {
+            "description" : "POST /registrations (no auth, JSON)",
+            "destinationId" : "7",
+            "id" : "36",
+            "sourceId" : "5",
+            "tags" : "Relationship"
+          }, {
+            "description" : "POST /registrations (no auth, JSON)",
+            "destinationId" : "6",
+            "id" : "37",
+            "linkedRelationshipId" : "36",
+            "sourceId" : "5"
+          } ],
+          "tags" : "Element,Component,Presentation",
+          "technology" : "Angular Component"
+        } ],
+        "description" : "Angular 20 SPA",
+        "documentation" : { },
+        "id" : "4",
+        "name" : "Frontend",
+        "properties" : {
+          "structurizr.dsl.identifier" : "frontend"
+        },
+        "relationships" : [ {
+          "description" : "POST /registrations (no auth, JSON)",
+          "destinationId" : "7",
+          "id" : "38",
+          "linkedRelationshipId" : "36",
+          "sourceId" : "4"
+        }, {
+          "description" : "POST /registrations (no auth, JSON)",
+          "destinationId" : "6",
+          "id" : "39",
+          "linkedRelationshipId" : "36",
+          "sourceId" : "4"
+        } ],
+        "tags" : "Element,Container,Frontend",
+        "technology" : "Angular 20"
+      }, {
+        "components" : [ {
+          "description" : "接收 POST /registrations，無 auth 保護",
+          "documentation" : { },
+          "group" : "registration 模組",
+          "id" : "7",
+          "name" : "RegistrationController",
+          "properties" : {
+            "structurizr.dsl.identifier" : "registrationController"
+          },
+          "relationships" : [ {
+            "description" : "submitApplication(cmd)",
+            "destinationId" : "8",
+            "id" : "42",
+            "sourceId" : "7",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Presentation,PublicEndpoint",
+          "technology" : "Spring RestController"
+        }, {
+          "description" : "執行 INV-001~004，協調持久化與 Port",
+          "documentation" : { },
+          "group" : "registration 模組",
+          "id" : "8",
+          "name" : "RegistrationApplicationService",
+          "properties" : {
+            "structurizr.dsl.identifier" : "registrationAppService"
+          },
+          "relationships" : [ {
+            "description" : "hasApprovedAccount(email)",
+            "destinationId" : "9",
+            "id" : "43",
+            "sourceId" : "8",
+            "tags" : "Relationship"
+          }, {
+            "description" : "findPendingByEmail / save",
+            "destinationId" : "10",
+            "id" : "44",
+            "sourceId" : "8",
+            "tags" : "Relationship"
+          }, {
+            "description" : "findAllByStatus / findById / save",
+            "destinationId" : "10",
+            "id" : "59",
+            "sourceId" : "8",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Application",
+          "technology" : "Spring Service"
+        }, {
+          "description" : "[SEAM-001] 查詢 email 是否已有 APPROVED 帳號；registration 模組消費者定義的 Port Interface",
+          "documentation" : { },
+          "group" : "registration 模組",
+          "id" : "9",
+          "name" : "AccountExistencePort",
+          "properties" : {
+            "structurizr.dsl.identifier" : "accountExistencePort"
+          },
+          "tags" : "Element,Component,Application,SEAM,Port",
+          "technology" : "Java Interface"
+        }, {
+          "description" : "Application 層 Port：定義申請紀錄的持久化契約（介面）；JPA 實作在 Infrastructure",
+          "documentation" : { },
+          "group" : "registration 模組",
+          "id" : "10",
+          "name" : "RegistrationApplicationRepository",
+          "properties" : {
+            "structurizr.dsl.identifier" : "registrationAppRepository"
+          },
+          "tags" : "Element,Component,Application,Port",
+          "technology" : "Java Interface"
+        }, {
+          "description" : "registration 模組公開介面：查詢所有 PENDING 申請",
+          "documentation" : { },
+          "group" : "registration 模組",
+          "id" : "11",
+          "name" : "ListPendingApplicationsUseCase",
+          "properties" : {
+            "structurizr.dsl.identifier" : "listPendingApplicationsUseCase"
+          },
+          "relationships" : [ {
+            "description" : "（實作）",
+            "destinationId" : "8",
+            "id" : "57",
+            "sourceId" : "11",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Application,Port",
+          "technology" : "Java Interface"
+        }, {
+          "description" : "registration 模組公開介面：對指定申請執行 approve 或 reject（INV-008/009/010）",
+          "documentation" : { },
+          "group" : "registration 模組",
+          "id" : "12",
+          "name" : "ReviewApplicationUseCase",
+          "properties" : {
+            "structurizr.dsl.identifier" : "reviewApplicationUseCase"
+          },
+          "relationships" : [ {
+            "description" : "（實作）",
+            "destinationId" : "8",
+            "id" : "58",
+            "sourceId" : "12",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Application,Port",
+          "technology" : "Java Interface"
+        }, {
+          "description" : "RegistrationApplicationRepository 的 Spring Data JPA 實作",
+          "documentation" : { },
+          "group" : "registration 模組",
+          "id" : "13",
+          "name" : "JpaRegistrationApplicationRepository",
+          "properties" : {
+            "structurizr.dsl.identifier" : "jpaRegistrationApplicationRepository"
+          },
+          "relationships" : [ {
+            "description" : "implements（Real）",
+            "destinationId" : "10",
+            "id" : "71",
+            "sourceId" : "13",
+            "tags" : "Relationship"
+          }, {
+            "description" : "JPA / JDBC",
+            "destinationId" : "32",
+            "id" : "72",
+            "sourceId" : "13",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Infrastructure,Adapter,Real",
+          "technology" : "Spring Data Repository"
+        }, {
+          "description" : "宣告 /registrations 為 PUBLIC 路徑的 Extension Point 實作",
+          "documentation" : { },
+          "group" : "registration 模組",
+          "id" : "14",
+          "name" : "RegistrationPublicPathContributor",
+          "properties" : {
+            "structurizr.dsl.identifier" : "registrationPublicPathContributor"
+          },
+          "relationships" : [ {
+            "description" : "implements",
+            "destinationId" : "15",
+            "id" : "52",
+            "sourceId" : "14",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Infrastructure,Adapter,Real",
+          "technology" : "Spring Component"
+        }, {
+          "description" : "Extension Point：security 模組定義，業務模組各自 implement 宣告 PUBLIC 路徑；SecurityConfig 啟動時透過 List<PublicPathContributor> 收集全部實作",
+          "documentation" : { },
+          "group" : "security 模組",
+          "id" : "15",
+          "name" : "PublicPathContributor",
+          "properties" : {
+            "structurizr.dsl.identifier" : "publicPathContributor"
+          },
+          "tags" : "Element,Component,Application,Port,ExtensionPoint",
+          "technology" : "Java Interface"
+        }, {
+          "description" : "JWT 簽發（iat/sub/exp）與驗證；security 模組唯一對外公開 API",
+          "documentation" : { },
+          "group" : "security 模組",
+          "id" : "16",
+          "name" : "JwtTokenProvider",
+          "properties" : {
+            "structurizr.dsl.identifier" : "jwtTokenProvider"
+          },
+          "tags" : "Element,Component,Infrastructure,Port",
+          "technology" : "Spring Component"
+        }, {
+          "description" : "收集所有 PublicPathContributor，建立 SecurityFilterChain；預設全路徑保護",
+          "documentation" : { },
+          "group" : "security 模組",
+          "id" : "17",
+          "name" : "SecurityConfig",
+          "properties" : {
+            "structurizr.dsl.identifier" : "securityConfig"
+          },
+          "relationships" : [ {
+            "description" : "收集所有實作（List<PublicPathContributor>）",
+            "destinationId" : "15",
+            "id" : "51",
+            "sourceId" : "17",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Infrastructure",
+          "technology" : "Spring Configuration"
+        }, {
+          "description" : "接收 POST /auth/login，PublicPathContributor 宣告為 PUBLIC",
+          "documentation" : { },
+          "group" : "admin 模組",
+          "id" : "18",
+          "name" : "AdminAuthController",
+          "properties" : {
+            "structurizr.dsl.identifier" : "adminAuthController"
+          },
+          "relationships" : [ {
+            "description" : "authenticate(cmd)",
+            "destinationId" : "19",
+            "id" : "48",
+            "sourceId" : "18",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Presentation,PublicEndpoint",
+          "technology" : "Spring RestController"
+        }, {
+          "description" : "驗證 admin 帳密（bcrypt），協調 JWT 簽發；執行 INV-005/006",
+          "documentation" : { },
+          "group" : "admin 模組",
+          "id" : "19",
+          "name" : "AdminAuthService",
+          "properties" : {
+            "structurizr.dsl.identifier" : "adminAuthService"
+          },
+          "relationships" : [ {
+            "description" : "findByUsername(username)",
+            "destinationId" : "20",
+            "id" : "49",
+            "sourceId" : "19",
+            "tags" : "Relationship"
+          }, {
+            "description" : "issueToken(username)",
+            "destinationId" : "16",
+            "id" : "50",
+            "sourceId" : "19",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Application",
+          "technology" : "Spring Service"
+        }, {
+          "description" : "Application 層 Port：定義 admin 帳密查詢契約；JPA 實作在 Infrastructure",
+          "documentation" : { },
+          "group" : "admin 模組",
+          "id" : "20",
+          "name" : "AdminCredentialRepository",
+          "properties" : {
+            "structurizr.dsl.identifier" : "adminCredentialRepository"
+          },
+          "tags" : "Element,Component,Application,Port",
+          "technology" : "Java Interface"
+        }, {
+          "description" : "Admin 帳號 entity：username + bcrypt 密碼 hash",
+          "documentation" : { },
+          "group" : "admin 模組",
+          "id" : "21",
+          "name" : "AdminCredential",
+          "properties" : {
+            "structurizr.dsl.identifier" : "adminCredential"
+          },
+          "tags" : "Element,Component,Domain",
+          "technology" : "JPA Entity"
+        }, {
+          "description" : "接收 GET /admin/applications 與 PATCH /admin/applications/{id}/review；受 JWT 保護；委派至 AdminApplicationService",
+          "documentation" : { },
+          "group" : "admin 模組",
+          "id" : "22",
+          "name" : "AdminApplicationController",
+          "properties" : {
+            "structurizr.dsl.identifier" : "adminApplicationController"
+          },
+          "relationships" : [ {
+            "description" : "listPending()",
+            "destinationId" : "11",
+            "id" : "55",
+            "sourceId" : "22",
+            "tags" : "Relationship"
+          }, {
+            "description" : "review(id, decision, reason, reviewerUsername)",
+            "destinationId" : "12",
+            "id" : "56",
+            "sourceId" : "22",
+            "tags" : "Relationship"
+          }, {
+            "description" : "approveAndProvisionAccount(id, reviewer)",
+            "destinationId" : "23",
+            "id" : "60",
+            "sourceId" : "22",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Presentation",
+          "technology" : "Spring RestController"
+        }, {
+          "description" : "Admin 模組 Application Service：協調跨模組兩階段流程（Stage1 review + Stage2 create）；處理部分失敗；不含業務規則（DEC-021）",
+          "documentation" : { },
+          "group" : "admin 模組",
+          "id" : "23",
+          "name" : "AdminApplicationService",
+          "properties" : {
+            "structurizr.dsl.identifier" : "adminApplicationService"
+          },
+          "relationships" : [ {
+            "description" : "Stage 1：review(id, APPROVE, reviewer)（transaction #1）",
+            "destinationId" : "12",
+            "id" : "61",
+            "sourceId" : "23",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Stage 2：create(email)（transaction #2，Stage 1 成功後）",
+            "destinationId" : "26",
+            "id" : "62",
+            "sourceId" : "23",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Application",
+          "technology" : "Spring Service"
+        }, {
+          "description" : "AdminCredentialRepository 的 Spring Data JPA 實作",
+          "documentation" : { },
+          "group" : "admin 模組",
+          "id" : "24",
+          "name" : "JpaAdminCredentialRepository",
+          "properties" : {
+            "structurizr.dsl.identifier" : "jpaAdminCredentialRepository"
+          },
+          "relationships" : [ {
+            "description" : "implements（Real）",
+            "destinationId" : "20",
+            "id" : "73",
+            "sourceId" : "24",
+            "tags" : "Relationship"
+          }, {
+            "description" : "JPA / JDBC",
+            "destinationId" : "32",
+            "id" : "74",
+            "sourceId" : "24",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Infrastructure,Adapter,Real",
+          "technology" : "Spring Data Repository"
+        }, {
+          "description" : "宣告 /auth/login 為 PUBLIC 路徑的 Extension Point 實作",
+          "documentation" : { },
+          "group" : "admin 模組",
+          "id" : "25",
+          "name" : "AdminPublicPathContributor",
+          "properties" : {
+            "structurizr.dsl.identifier" : "adminPublicPathContributor"
+          },
+          "relationships" : [ {
+            "description" : "implements",
+            "destinationId" : "15",
+            "id" : "53",
+            "sourceId" : "25",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Infrastructure,Adapter,Real",
+          "technology" : "Spring Component"
+        }, {
+          "description" : "account 模組公開介面：建立 ACTIVE 帳號，BCrypt 密碼 hash（INV-011/012/013）",
+          "documentation" : { },
+          "group" : "account 模組",
+          "id" : "26",
+          "name" : "CreateAccountUseCase",
+          "properties" : {
+            "structurizr.dsl.identifier" : "createAccountUseCase"
+          },
+          "relationships" : [ {
+            "description" : "（實作）",
+            "destinationId" : "27",
+            "id" : "63",
+            "sourceId" : "26",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Application,Port",
+          "technology" : "Java Interface"
+        }, {
+          "description" : "執行 INV-011~013，協調帳號持久化；BCrypt encode 預設密碼",
+          "documentation" : { },
+          "group" : "account 模組",
+          "id" : "27",
+          "name" : "AccountApplicationService",
+          "properties" : {
+            "structurizr.dsl.identifier" : "accountApplicationService"
+          },
+          "relationships" : [ {
+            "description" : "save / findByEmail",
+            "destinationId" : "29",
+            "id" : "64",
+            "sourceId" : "27",
+            "tags" : "Relationship"
+          }, {
+            "description" : "new Account(email, BCrypt, ACTIVE)（INV-012, INV-013）",
+            "destinationId" : "28",
+            "id" : "65",
+            "sourceId" : "27",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Application",
+          "technology" : "Spring Service"
+        }, {
+          "description" : "帳號 Aggregate Root：id(UUID)・email(UNIQUE)・passwordHash・status=ACTIVE・createdAt・lastModifiedAt",
+          "documentation" : { },
+          "group" : "account 模組",
+          "id" : "28",
+          "name" : "Account",
+          "properties" : {
+            "structurizr.dsl.identifier" : "accountEntity"
+          },
+          "tags" : "Element,Component,Domain",
+          "technology" : "JPA Entity"
+        }, {
+          "description" : "Application 層 Port：定義帳號持久化契約（介面）；JPA 實作在 Infrastructure",
+          "documentation" : { },
+          "group" : "account 模組",
+          "id" : "29",
+          "name" : "AccountRepository",
+          "properties" : {
+            "structurizr.dsl.identifier" : "accountRepository"
+          },
+          "tags" : "Element,Component,Application,Port",
+          "technology" : "Java Interface"
+        }, {
+          "description" : "[SEAM-001] Real 實作，取代 StubAccountExistenceAdapter；查詢 accounts table 是否有相同 email（INV-014）",
+          "documentation" : { },
+          "group" : "account 模組",
+          "id" : "30",
+          "name" : "JpaAccountExistenceAdapter",
+          "properties" : {
+            "structurizr.dsl.identifier" : "jpaAccountExistenceAdapter"
+          },
+          "relationships" : [ {
+            "description" : "implements（Real，SEAM-001 填充）",
+            "destinationId" : "9",
+            "id" : "66",
+            "sourceId" : "30",
+            "tags" : "Relationship"
+          }, {
+            "description" : "JPA / JDBC（SELECT accounts WHERE email）",
+            "destinationId" : "32",
+            "id" : "67",
+            "sourceId" : "30",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Infrastructure,Adapter,Real",
+          "technology" : "Spring Component"
+        }, {
+          "description" : "AccountRepository 的 Spring Data JPA 實作",
+          "documentation" : { },
+          "group" : "account 模組",
+          "id" : "31",
+          "name" : "JpaAccountRepository",
+          "properties" : {
+            "structurizr.dsl.identifier" : "jpaAccountRepository"
+          },
+          "relationships" : [ {
+            "description" : "implements（Real）",
+            "destinationId" : "29",
+            "id" : "69",
+            "sourceId" : "31",
+            "tags" : "Relationship"
+          }, {
+            "description" : "JPA / JDBC",
+            "destinationId" : "32",
+            "id" : "70",
+            "sourceId" : "31",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component,Infrastructure,Adapter,Real",
+          "technology" : "Spring Data Repository"
+        } ],
+        "description" : "Spring Boot 3.5.13 + Spring Modulith 1.3.12",
+        "documentation" : { },
+        "id" : "6",
+        "name" : "Backend",
+        "properties" : {
+          "structurizr.dsl.identifier" : "backend"
+        },
+        "relationships" : [ {
+          "description" : "JPA / JDBC（SELECT accounts WHERE email）",
+          "destinationId" : "32",
+          "id" : "68",
+          "linkedRelationshipId" : "67",
+          "sourceId" : "6"
+        } ],
+        "tags" : "Element,Container,Backend",
+        "technology" : "JVM / Java 21"
+      }, {
+        "description" : "PostgreSQL 17（生產）/ H2（測試）",
+        "documentation" : { },
+        "id" : "32",
+        "name" : "Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "db"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "RDBMS"
+      } ],
+      "description" : "Spring Boot 3 + Spring Modulith + Angular 20",
+      "documentation" : { },
+      "id" : "3",
+      "name" : "SM-T1 System",
+      "properties" : {
+        "structurizr.dsl.identifier" : "smSystem"
+      },
+      "tags" : "Element,Software System"
+    } ]
+  },
+  "name" : "SM-T1",
+  "properties" : {
+    "structurizr.inspection.error" : "45",
+    "structurizr.dsl" : "d29ya3NwYWNlICJTTS1UMSIgIlN5c3RlbSBNb2R1bGUgLSBNZXRob2RvbG9neSBWYWxpZGF0aW9uIiB7CgogICAgbW9kZWwgewogICAgICAgIHZpc2l0b3IgPSBwZXJzb24gIlZpc2l0b3IiICLmnKrmjIHmnInluLPomZ/jgIHmg7PnlLPoq4vmiJDngrrns7vntbHkvb/nlKjogIUiIHsKICAgICAgICAgICAgdGFncyAiQWN0b3IiCiAgICAgICAgfQoKICAgICAgICBhZG1pbiA9IHBlcnNvbiAiQWRtaW4iICLnrqHnkIbogIXvvIzosqDosqzlr6nmoLjnlLPoq4siIHsKICAgICAgICAgICAgdGFncyAiQWN0b3IiCiAgICAgICAgfQoKICAgICAgICBzbVN5c3RlbSA9IHNvZnR3YXJlU3lzdGVtICJTTS1UMSBTeXN0ZW0iICJTcHJpbmcgQm9vdCAzICsgU3ByaW5nIE1vZHVsaXRoICsgQW5ndWxhciAyMCIgewoKICAgICAgICAgICAgZnJvbnRlbmQgPSBjb250YWluZXIgIkZyb250ZW5kIiAiQW5ndWxhciAyMCBTUEEiICJBbmd1bGFyIDIwIiB7CiAgICAgICAgICAgICAgICB0YWdzICJGcm9udGVuZCIKCiAgICAgICAgICAgICAgICByZWdpc3RyYXRpb25Gb3JtID0gY29tcG9uZW50ICJSZWdpc3RyYXRpb25Gb3JtIiAi55Sz6KuL6KGo5ZauIENvbXBvbmVudO+8jOaUtumbhiBlbWFpbCDoiIcgbmFtZSIgIkFuZ3VsYXIgQ29tcG9uZW50IiB7CiAgICAgICAgICAgICAgICAgICAgdGFncyAiUHJlc2VudGF0aW9uIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CgogICAgICAgICAgICBiYWNrZW5kID0gY29udGFpbmVyICJCYWNrZW5kIiAiU3ByaW5nIEJvb3QgMy41LjEzICsgU3ByaW5nIE1vZHVsaXRoIDEuMy4xMiIgIkpWTSAvIEphdmEgMjEiIHsKICAgICAgICAgICAgICAgIHRhZ3MgIkJhY2tlbmQiCgogICAgICAgICAgICAgICAgLy8g4pSA4pSAIHJlZ2lzdHJhdGlvbiDmqKHntYQg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACiAgICAgICAgICAgICAgICBncm91cCAicmVnaXN0cmF0aW9uIOaooee1hCIgewogICAgICAgICAgICAgICAgICAgIHJlZ2lzdHJhdGlvbkNvbnRyb2xsZXIgPSBjb21wb25lbnQgIlJlZ2lzdHJhdGlvbkNvbnRyb2xsZXIiICLmjqXmlLYgUE9TVCAvcmVnaXN0cmF0aW9uc++8jOeEoSBhdXRoIOS/neittyIgIlNwcmluZyBSZXN0Q29udHJvbGxlciIgewogICAgICAgICAgICAgICAgICAgICAgICB0YWdzICJQcmVzZW50YXRpb24iICJQdWJsaWNFbmRwb2ludCIKICAgICAgICAgICAgICAgICAgICB9CgogICAgICAgICAgICAgICAgICAgIHJlZ2lzdHJhdGlvbkFwcFNlcnZpY2UgPSBjb21wb25lbnQgIlJlZ2lzdHJhdGlvbkFwcGxpY2F0aW9uU2VydmljZSIgIuWft+ihjCBJTlYtMDAxfjAwNO+8jOWNlOiqv+aMgeS5heWMluiIhyBQb3J0IiAiU3ByaW5nIFNlcnZpY2UiIHsKICAgICAgICAgICAgICAgICAgICAgICAgdGFncyAiQXBwbGljYXRpb24iCiAgICAgICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgICAgICBhY2NvdW50RXhpc3RlbmNlUG9ydCA9IGNvbXBvbmVudCAiQWNjb3VudEV4aXN0ZW5jZVBvcnQiICJbU0VBTS0wMDFdIOafpeipoiBlbWFpbCDmmK/lkKblt7LmnIkgQVBQUk9WRUQg5biz6Jmf77ybcmVnaXN0cmF0aW9uIOaooee1hOa2iOiyu+iAheWumue+qeeahCBQb3J0IEludGVyZmFjZSIgIkphdmEgSW50ZXJmYWNlIiB7CiAgICAgICAgICAgICAgICAgICAgICAgIHRhZ3MgIkFwcGxpY2F0aW9uIiAiU0VBTSIgIlBvcnQiCiAgICAgICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgICAgICByZWdpc3RyYXRpb25BcHBSZXBvc2l0b3J5ID0gY29tcG9uZW50ICJSZWdpc3RyYXRpb25BcHBsaWNhdGlvblJlcG9zaXRvcnkiICJBcHBsaWNhdGlvbiDlsaQgUG9ydO+8muWumue+qeeUs+iri+e0gOmMhOeahOaMgeS5heWMluWlkee0hO+8iOS7i+mdou+8ie+8m0pQQSDlr6bkvZzlnKggSW5mcmFzdHJ1Y3R1cmUiICJKYXZhIEludGVyZmFjZSIgewogICAgICAgICAgICAgICAgICAgICAgICB0YWdzICJBcHBsaWNhdGlvbiIgIlBvcnQiCiAgICAgICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgICAgICBsaXN0UGVuZGluZ0FwcGxpY2F0aW9uc1VzZUNhc2UgPSBjb21wb25lbnQgIkxpc3RQZW5kaW5nQXBwbGljYXRpb25zVXNlQ2FzZSIgInJlZ2lzdHJhdGlvbiDmqKHntYTlhazplovku4vpnaLvvJrmn6XoqaLmiYDmnIkgUEVORElORyDnlLPoq4siICJKYXZhIEludGVyZmFjZSIgewogICAgICAgICAgICAgICAgICAgICAgICB0YWdzICJBcHBsaWNhdGlvbiIgIlBvcnQiCiAgICAgICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgICAgICByZXZpZXdBcHBsaWNhdGlvblVzZUNhc2UgPSBjb21wb25lbnQgIlJldmlld0FwcGxpY2F0aW9uVXNlQ2FzZSIgInJlZ2lzdHJhdGlvbiDmqKHntYTlhazplovku4vpnaLvvJrlsI3mjIflrprnlLPoq4vln7fooYwgYXBwcm92ZSDmiJYgcmVqZWN077yISU5WLTAwOC8wMDkvMDEw77yJIiAiSmF2YSBJbnRlcmZhY2UiIHsKICAgICAgICAgICAgICAgICAgICAgICAgdGFncyAiQXBwbGljYXRpb24iICJQb3J0IgogICAgICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICAgICAganBhUmVnaXN0cmF0aW9uQXBwbGljYXRpb25SZXBvc2l0b3J5ID0gY29tcG9uZW50ICJKcGFSZWdpc3RyYXRpb25BcHBsaWNhdGlvblJlcG9zaXRvcnkiICJSZWdpc3RyYXRpb25BcHBsaWNhdGlvblJlcG9zaXRvcnkg55qEIFNwcmluZyBEYXRhIEpQQSDlr6bkvZwiICJTcHJpbmcgRGF0YSBSZXBvc2l0b3J5IiB7CiAgICAgICAgICAgICAgICAgICAgICAgIHRhZ3MgIkluZnJhc3RydWN0dXJlIiAiQWRhcHRlciIgIlJlYWwiCiAgICAgICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgICAgICByZWdpc3RyYXRpb25QdWJsaWNQYXRoQ29udHJpYnV0b3IgPSBjb21wb25lbnQgIlJlZ2lzdHJhdGlvblB1YmxpY1BhdGhDb250cmlidXRvciIgIuWuo+WRiiAvcmVnaXN0cmF0aW9ucyDngrogUFVCTElDIOi3r+W+keeahCBFeHRlbnNpb24gUG9pbnQg5a+m5L2cIiAiU3ByaW5nIENvbXBvbmVudCIgewogICAgICAgICAgICAgICAgICAgICAgICB0YWdzICJJbmZyYXN0cnVjdHVyZSIgIkFkYXB0ZXIiICJSZWFsIgogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICAvLyDilIDilIAgc2VjdXJpdHkg5qih57WEIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAogICAgICAgICAgICAgICAgZ3JvdXAgInNlY3VyaXR5IOaooee1hCIgewogICAgICAgICAgICAgICAgICAgIHB1YmxpY1BhdGhDb250cmlidXRvciA9IGNvbXBvbmVudCAiUHVibGljUGF0aENvbnRyaWJ1dG9yIiAiRXh0ZW5zaW9uIFBvaW5077yac2VjdXJpdHkg5qih57WE5a6a576p77yM5qWt5YuZ5qih57WE5ZCE6IeqIGltcGxlbWVudCDlrqPlkYogUFVCTElDIOi3r+W+ke+8m1NlY3VyaXR5Q29uZmlnIOWVn+WLleaZgumAj+mBjiBMaXN0PFB1YmxpY1BhdGhDb250cmlidXRvcj4g5pS26ZuG5YWo6YOo5a+m5L2cIiAiSmF2YSBJbnRlcmZhY2UiIHsKICAgICAgICAgICAgICAgICAgICAgICAgdGFncyAiQXBwbGljYXRpb24iICJQb3J0IiAiRXh0ZW5zaW9uUG9pbnQiCiAgICAgICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgICAgICBqd3RUb2tlblByb3ZpZGVyID0gY29tcG9uZW50ICJKd3RUb2tlblByb3ZpZGVyIiAiSldUIOewveeZvO+8iGlhdC9zdWIvZXhw77yJ6IiH6amX6K2J77ybc2VjdXJpdHkg5qih57WE5ZSv5LiA5bCN5aSW5YWs6ZaLIEFQSSIgIlNwcmluZyBDb21wb25lbnQiIHsKICAgICAgICAgICAgICAgICAgICAgICAgdGFncyAiSW5mcmFzdHJ1Y3R1cmUiICJQb3J0IgogICAgICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICAgICAgc2VjdXJpdHlDb25maWcgPSBjb21wb25lbnQgIlNlY3VyaXR5Q29uZmlnIiAi5pS26ZuG5omA5pyJIFB1YmxpY1BhdGhDb250cmlidXRvcu+8jOW7uueriyBTZWN1cml0eUZpbHRlckNoYWlu77yb6aCQ6Kit5YWo6Lev5b6R5L+d6K23IiAiU3ByaW5nIENvbmZpZ3VyYXRpb24iIHsKICAgICAgICAgICAgICAgICAgICAgICAgdGFncyAiSW5mcmFzdHJ1Y3R1cmUiCiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgIC8vIOKUgOKUgCBhZG1pbiDmqKHntYQg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACiAgICAgICAgICAgICAgICBncm91cCAiYWRtaW4g5qih57WEIiB7CiAgICAgICAgICAgICAgICAgICAgYWRtaW5BdXRoQ29udHJvbGxlciA9IGNvbXBvbmVudCAiQWRtaW5BdXRoQ29udHJvbGxlciIgIuaOpeaUtiBQT1NUIC9hdXRoL2xvZ2lu77yMUHVibGljUGF0aENvbnRyaWJ1dG9yIOWuo+WRiueCuiBQVUJMSUMiICJTcHJpbmcgUmVzdENvbnRyb2xsZXIiIHsKICAgICAgICAgICAgICAgICAgICAgICAgdGFncyAiUHJlc2VudGF0aW9uIiAiUHVibGljRW5kcG9pbnQiCiAgICAgICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgICAgICBhZG1pbkF1dGhTZXJ2aWNlID0gY29tcG9uZW50ICJBZG1pbkF1dGhTZXJ2aWNlIiAi6amX6K2JIGFkbWluIOW4s+Wvhu+8iGJjcnlwdO+8ie+8jOWNlOiqvyBKV1Qg57C955m877yb5Z+36KGMIElOVi0wMDUvMDA2IiAiU3ByaW5nIFNlcnZpY2UiIHsKICAgICAgICAgICAgICAgICAgICAgICAgdGFncyAiQXBwbGljYXRpb24iCiAgICAgICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgICAgICBhZG1pbkNyZWRlbnRpYWxSZXBvc2l0b3J5ID0gY29tcG9uZW50ICJBZG1pbkNyZWRlbnRpYWxSZXBvc2l0b3J5IiAiQXBwbGljYXRpb24g5bGkIFBvcnTvvJrlrprnvqkgYWRtaW4g5biz5a+G5p+l6Kmi5aWR57SE77ybSlBBIOWvpuS9nOWcqCBJbmZyYXN0cnVjdHVyZSIgIkphdmEgSW50ZXJmYWNlIiB7CiAgICAgICAgICAgICAgICAgICAgICAgIHRhZ3MgIkFwcGxpY2F0aW9uIiAiUG9ydCIKICAgICAgICAgICAgICAgICAgICB9CgogICAgICAgICAgICAgICAgICAgIGFkbWluQ3JlZGVudGlhbCA9IGNvbXBvbmVudCAiQWRtaW5DcmVkZW50aWFsIiAiQWRtaW4g5biz6JmfIGVudGl0ee+8mnVzZXJuYW1lICsgYmNyeXB0IOWvhueivCBoYXNoIiAiSlBBIEVudGl0eSIgewogICAgICAgICAgICAgICAgICAgICAgICB0YWdzICJEb21haW4iCiAgICAgICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgICAgICBhZG1pbkFwcGxpY2F0aW9uQ29udHJvbGxlciA9IGNvbXBvbmVudCAiQWRtaW5BcHBsaWNhdGlvbkNvbnRyb2xsZXIiICLmjqXmlLYgR0VUIC9hZG1pbi9hcHBsaWNhdGlvbnMg6IiHIFBBVENIIC9hZG1pbi9hcHBsaWNhdGlvbnMve2lkfS9yZXZpZXfvvJvlj5cgSldUIOS/neitt++8m+WnlOa0vuiHsyBBZG1pbkFwcGxpY2F0aW9uU2VydmljZSIgIlNwcmluZyBSZXN0Q29udHJvbGxlciIgewogICAgICAgICAgICAgICAgICAgICAgICB0YWdzICJQcmVzZW50YXRpb24iCiAgICAgICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgICAgICBhZG1pbkFwcGxpY2F0aW9uU2VydmljZSA9IGNvbXBvbmVudCAiQWRtaW5BcHBsaWNhdGlvblNlcnZpY2UiICJBZG1pbiDmqKHntYQgQXBwbGljYXRpb24gU2VydmljZe+8muWNlOiqv+i3qOaooee1hOWFqemajuautea1geeoi++8iFN0YWdlMSByZXZpZXcgKyBTdGFnZTIgY3JlYXRl77yJ77yb6JmV55CG6YOo5YiG5aSx5pWX77yb5LiN5ZCr5qWt5YuZ6KaP5YmH77yIREVDLTAyMe+8iSIgIlNwcmluZyBTZXJ2aWNlIiB7CiAgICAgICAgICAgICAgICAgICAgICAgIHRhZ3MgIkFwcGxpY2F0aW9uIgogICAgICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICAgICAganBhQWRtaW5DcmVkZW50aWFsUmVwb3NpdG9yeSA9IGNvbXBvbmVudCAiSnBhQWRtaW5DcmVkZW50aWFsUmVwb3NpdG9yeSIgIkFkbWluQ3JlZGVudGlhbFJlcG9zaXRvcnkg55qEIFNwcmluZyBEYXRhIEpQQSDlr6bkvZwiICJTcHJpbmcgRGF0YSBSZXBvc2l0b3J5IiB7CiAgICAgICAgICAgICAgICAgICAgICAgIHRhZ3MgIkluZnJhc3RydWN0dXJlIiAiQWRhcHRlciIgIlJlYWwiCiAgICAgICAgICAgICAgICAgICAgfQoKICAgICAgICAgICAgICAgICAgICBhZG1pblB1YmxpY1BhdGhDb250cmlidXRvciA9IGNvbXBvbmVudCAiQWRtaW5QdWJsaWNQYXRoQ29udHJpYnV0b3IiICLlrqPlkYogL2F1dGgvbG9naW4g54K6IFBVQkxJQyDot6/lvpHnmoQgRXh0ZW5zaW9uIFBvaW50IOWvpuS9nCIgIlNwcmluZyBDb21wb25lbnQiIHsKICAgICAgICAgICAgICAgICAgICAgICAgdGFncyAiSW5mcmFzdHJ1Y3R1cmUiICJBZGFwdGVyIiAiUmVhbCIKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICB9CgogICAgICAgICAgICAgICAgLy8g4pSA4pSAIGFjY291bnQg5qih57WEIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAogICAgICAgICAgICAgICAgZ3JvdXAgImFjY291bnQg5qih57WEIiB7CiAgICAgICAgICAgICAgICAgICAgY3JlYXRlQWNjb3VudFVzZUNhc2UgPSBjb21wb25lbnQgIkNyZWF0ZUFjY291bnRVc2VDYXNlIiAiYWNjb3VudCDmqKHntYTlhazplovku4vpnaLvvJrlu7rnq4sgQUNUSVZFIOW4s+iZn++8jEJDcnlwdCDlr4bnorwgaGFzaO+8iElOVi0wMTEvMDEyLzAxM++8iSIgIkphdmEgSW50ZXJmYWNlIiB7CiAgICAgICAgICAgICAgICAgICAgICAgIHRhZ3MgIkFwcGxpY2F0aW9uIiAiUG9ydCIKICAgICAgICAgICAgICAgICAgICB9CgogICAgICAgICAgICAgICAgICAgIGFjY291bnRBcHBsaWNhdGlvblNlcnZpY2UgPSBjb21wb25lbnQgIkFjY291bnRBcHBsaWNhdGlvblNlcnZpY2UiICLln7fooYwgSU5WLTAxMX4wMTPvvIzljZToqr/luLPomZ/mjIHkuYXljJbvvJtCQ3J5cHQgZW5jb2RlIOmgkOioreWvhueivCIgIlNwcmluZyBTZXJ2aWNlIiB7CiAgICAgICAgICAgICAgICAgICAgICAgIHRhZ3MgIkFwcGxpY2F0aW9uIgogICAgICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICAgICAgYWNjb3VudEVudGl0eSA9IGNvbXBvbmVudCAiQWNjb3VudCIgIuW4s+iZnyBBZ2dyZWdhdGUgUm9vdO+8mmlkKFVVSUQp44O7ZW1haWwoVU5JUVVFKeODu3Bhc3N3b3JkSGFzaOODu3N0YXR1cz1BQ1RJVkXjg7tjcmVhdGVkQXTjg7tsYXN0TW9kaWZpZWRBdCIgIkpQQSBFbnRpdHkiIHsKICAgICAgICAgICAgICAgICAgICAgICAgdGFncyAiRG9tYWluIgogICAgICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICAgICAgYWNjb3VudFJlcG9zaXRvcnkgPSBjb21wb25lbnQgIkFjY291bnRSZXBvc2l0b3J5IiAiQXBwbGljYXRpb24g5bGkIFBvcnTvvJrlrprnvqnluLPomZ/mjIHkuYXljJblpZHntITvvIjku4vpnaLvvInvvJtKUEEg5a+m5L2c5ZyoIEluZnJhc3RydWN0dXJlIiAiSmF2YSBJbnRlcmZhY2UiIHsKICAgICAgICAgICAgICAgICAgICAgICAgdGFncyAiQXBwbGljYXRpb24iICJQb3J0IgogICAgICAgICAgICAgICAgICAgIH0KCiAgICAgICAgICAgICAgICAgICAganBhQWNjb3VudEV4aXN0ZW5jZUFkYXB0ZXIgPSBjb21wb25lbnQgIkpwYUFjY291bnRFeGlzdGVuY2VBZGFwdGVyIiAiW1NFQU0tMDAxXSBSZWFsIOWvpuS9nO+8jOWPluS7oyBTdHViQWNjb3VudEV4aXN0ZW5jZUFkYXB0ZXLvvJvmn6XoqaIgYWNjb3VudHMgdGFibGUg5piv5ZCm5pyJ55u45ZCMIGVtYWls77yISU5WLTAxNO+8iSIgIlNwcmluZyBDb21wb25lbnQiIHsKICAgICAgICAgICAgICAgICAgICAgICAgdGFncyAiSW5mcmFzdHJ1Y3R1cmUiICJBZGFwdGVyIiAiUmVhbCIKICAgICAgICAgICAgICAgICAgICB9CgogICAgICAgICAgICAgICAgICAgIGpwYUFjY291bnRSZXBvc2l0b3J5ID0gY29tcG9uZW50ICJKcGFBY2NvdW50UmVwb3NpdG9yeSIgIkFjY291bnRSZXBvc2l0b3J5IOeahCBTcHJpbmcgRGF0YSBKUEEg5a+m5L2cIiAiU3ByaW5nIERhdGEgUmVwb3NpdG9yeSIgewogICAgICAgICAgICAgICAgICAgICAgICB0YWdzICJJbmZyYXN0cnVjdHVyZSIgIkFkYXB0ZXIiICJSZWFsIgogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQoKICAgICAgICAgICAgZGIgPSBjb250YWluZXIgIkRhdGFiYXNlIiAiUG9zdGdyZVNRTCAxN++8iOeUn+eUou+8iS8gSDLvvIjmuKzoqabvvIkiICJSREJNUyIgewogICAgICAgICAgICAgICAgdGFncyAiRGF0YWJhc2UiCiAgICAgICAgICAgIH0KICAgICAgICB9CgogICAgICAgIHZpc2l0b3IgLT4gcmVnaXN0cmF0aW9uRm9ybSAi5aGr5a+r5Lim6YCB5Ye655Sz6KuLIgogICAgICAgIHJlZ2lzdHJhdGlvbkZvcm0gLT4gcmVnaXN0cmF0aW9uQ29udHJvbGxlciAiUE9TVCAvcmVnaXN0cmF0aW9ucyAobm8gYXV0aCwgSlNPTikiCiAgICAgICAgdmlzaXRvciAtPiByZWdpc3RyYXRpb25Db250cm9sbGVyICJQT1NUIC9yZWdpc3RyYXRpb25zIChubyBhdXRoLCBKU09OKSIgIkwzIGNvbXBvbmVudCB2aWV3IOebtOmAo++8iGZyb250ZW5kIFNQQSDlsJrmnKroqK3oqIjvvIzlnKggTDMg55yB55Wl77yMTDEvTDIg5L+d55WZIGZyb250ZW5kIOevgOm7nu+8iSIKICAgICAgICByZWdpc3RyYXRpb25Db250cm9sbGVyIC0+IHJlZ2lzdHJhdGlvbkFwcFNlcnZpY2UgInN1Ym1pdEFwcGxpY2F0aW9uKGNtZCkiCiAgICAgICAgcmVnaXN0cmF0aW9uQXBwU2VydmljZSAtPiBhY2NvdW50RXhpc3RlbmNlUG9ydCAiaGFzQXBwcm92ZWRBY2NvdW50KGVtYWlsKSIKICAgICAgICByZWdpc3RyYXRpb25BcHBTZXJ2aWNlIC0+IHJlZ2lzdHJhdGlvbkFwcFJlcG9zaXRvcnkgImZpbmRQZW5kaW5nQnlFbWFpbCAvIHNhdmUiCgogICAgICAgIC8vIFNMSUNFLTAwMiByZWxhdGlvbnNoaXBzCiAgICAgICAgYWRtaW4gLT4gYWRtaW5BdXRoQ29udHJvbGxlciAiUE9TVCAvYXV0aC9sb2dpbiB7dXNlcm5hbWUsIHBhc3N3b3JkfSIKICAgICAgICBhZG1pbkF1dGhDb250cm9sbGVyIC0+IGFkbWluQXV0aFNlcnZpY2UgImF1dGhlbnRpY2F0ZShjbWQpIgogICAgICAgIGFkbWluQXV0aFNlcnZpY2UgLT4gYWRtaW5DcmVkZW50aWFsUmVwb3NpdG9yeSAiZmluZEJ5VXNlcm5hbWUodXNlcm5hbWUpIgogICAgICAgIGFkbWluQXV0aFNlcnZpY2UgLT4gand0VG9rZW5Qcm92aWRlciAiaXNzdWVUb2tlbih1c2VybmFtZSkiCiAgICAgICAgc2VjdXJpdHlDb25maWcgLT4gcHVibGljUGF0aENvbnRyaWJ1dG9yICLmlLbpm4bmiYDmnInlr6bkvZzvvIhMaXN0PFB1YmxpY1BhdGhDb250cmlidXRvcj7vvIkiCiAgICAgICAgcmVnaXN0cmF0aW9uUHVibGljUGF0aENvbnRyaWJ1dG9yIC0+IHB1YmxpY1BhdGhDb250cmlidXRvciAiaW1wbGVtZW50cyIKICAgICAgICBhZG1pblB1YmxpY1BhdGhDb250cmlidXRvciAtPiBwdWJsaWNQYXRoQ29udHJpYnV0b3IgImltcGxlbWVudHMiCgogICAgICAgIC8vIFNMSUNFLTAwMyByZWxhdGlvbnNoaXBzCiAgICAgICAgYWRtaW4gLT4gYWRtaW5BcHBsaWNhdGlvbkNvbnRyb2xsZXIgIkdFVCAvYWRtaW4vYXBwbGljYXRpb25zIC8gUEFUQ0ggL2FkbWluL2FwcGxpY2F0aW9ucy97aWR9L3JldmlldyBbQmVhcmVyIEpXVF0iCiAgICAgICAgYWRtaW5BcHBsaWNhdGlvbkNvbnRyb2xsZXIgLT4gbGlzdFBlbmRpbmdBcHBsaWNhdGlvbnNVc2VDYXNlICJsaXN0UGVuZGluZygpIgogICAgICAgIGFkbWluQXBwbGljYXRpb25Db250cm9sbGVyIC0+IHJldmlld0FwcGxpY2F0aW9uVXNlQ2FzZSAicmV2aWV3KGlkLCBkZWNpc2lvbiwgcmVhc29uLCByZXZpZXdlclVzZXJuYW1lKSIKICAgICAgICBsaXN0UGVuZGluZ0FwcGxpY2F0aW9uc1VzZUNhc2UgLT4gcmVnaXN0cmF0aW9uQXBwU2VydmljZSAi77yI5a+m5L2c77yJIgogICAgICAgIHJldmlld0FwcGxpY2F0aW9uVXNlQ2FzZSAtPiByZWdpc3RyYXRpb25BcHBTZXJ2aWNlICLvvIjlr6bkvZzvvIkiCiAgICAgICAgcmVnaXN0cmF0aW9uQXBwU2VydmljZSAtPiByZWdpc3RyYXRpb25BcHBSZXBvc2l0b3J5ICJmaW5kQWxsQnlTdGF0dXMgLyBmaW5kQnlJZCAvIHNhdmUiCgogICAgICAgIC8vIFNMSUNFLTAwNCByZWxhdGlvbnNoaXBzCiAgICAgICAgYWRtaW5BcHBsaWNhdGlvbkNvbnRyb2xsZXIgLT4gYWRtaW5BcHBsaWNhdGlvblNlcnZpY2UgImFwcHJvdmVBbmRQcm92aXNpb25BY2NvdW50KGlkLCByZXZpZXdlcikiCiAgICAgICAgYWRtaW5BcHBsaWNhdGlvblNlcnZpY2UgLT4gcmV2aWV3QXBwbGljYXRpb25Vc2VDYXNlICJTdGFnZSAx77yacmV2aWV3KGlkLCBBUFBST1ZFLCByZXZpZXdlcinvvIh0cmFuc2FjdGlvbiAjMe+8iSIKICAgICAgICBhZG1pbkFwcGxpY2F0aW9uU2VydmljZSAtPiBjcmVhdGVBY2NvdW50VXNlQ2FzZSAiU3RhZ2UgMu+8mmNyZWF0ZShlbWFpbCnvvIh0cmFuc2FjdGlvbiAjMu+8jFN0YWdlIDEg5oiQ5Yqf5b6M77yJIgogICAgICAgIGNyZWF0ZUFjY291bnRVc2VDYXNlIC0+IGFjY291bnRBcHBsaWNhdGlvblNlcnZpY2UgIu+8iOWvpuS9nO+8iSIKICAgICAgICBhY2NvdW50QXBwbGljYXRpb25TZXJ2aWNlIC0+IGFjY291bnRSZXBvc2l0b3J5ICJzYXZlIC8gZmluZEJ5RW1haWwiCiAgICAgICAgYWNjb3VudEFwcGxpY2F0aW9uU2VydmljZSAtPiBhY2NvdW50RW50aXR5ICJuZXcgQWNjb3VudChlbWFpbCwgQkNyeXB0LCBBQ1RJVkUp77yISU5WLTAxMiwgSU5WLTAxM++8iSIKCiAgICAgICAgLy8gUG9ydCDihpQgQWRhcHRlciBpbXBsZW1lbnRzIHJlbGF0aW9uc2hpcHPvvIhTRUFNIOeUn+WRvemAseacn++8iQogICAgICAgIGpwYUFjY291bnRFeGlzdGVuY2VBZGFwdGVyIC0+IGFjY291bnRFeGlzdGVuY2VQb3J0ICJpbXBsZW1lbnRz77yIUmVhbO+8jFNFQU0tMDAxIOWhq+WFhe+8iSIKICAgICAgICBqcGFBY2NvdW50RXhpc3RlbmNlQWRhcHRlciAtPiBkYiAiSlBBIC8gSkRCQ++8iFNFTEVDVCBhY2NvdW50cyBXSEVSRSBlbWFpbO+8iSIKICAgICAgICBqcGFBY2NvdW50UmVwb3NpdG9yeSAtPiBhY2NvdW50UmVwb3NpdG9yeSAiaW1wbGVtZW50c++8iFJlYWzvvIkiCiAgICAgICAganBhQWNjb3VudFJlcG9zaXRvcnkgLT4gZGIgIkpQQSAvIEpEQkMiCiAgICAgICAganBhUmVnaXN0cmF0aW9uQXBwbGljYXRpb25SZXBvc2l0b3J5IC0+IHJlZ2lzdHJhdGlvbkFwcFJlcG9zaXRvcnkgImltcGxlbWVudHPvvIhSZWFs77yJIgogICAgICAgIGpwYVJlZ2lzdHJhdGlvbkFwcGxpY2F0aW9uUmVwb3NpdG9yeSAtPiBkYiAiSlBBIC8gSkRCQyIKICAgICAgICBqcGFBZG1pbkNyZWRlbnRpYWxSZXBvc2l0b3J5IC0+IGFkbWluQ3JlZGVudGlhbFJlcG9zaXRvcnkgImltcGxlbWVudHPvvIhSZWFs77yJIgogICAgICAgIGpwYUFkbWluQ3JlZGVudGlhbFJlcG9zaXRvcnkgLT4gZGIgIkpQQSAvIEpEQkMiCiAgICB9CgogICAgdmlld3MgewogICAgICAgIHN5c3RlbUNvbnRleHQgc21TeXN0ZW0gIlN5c3RlbUNvbnRleHQiIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgdGIKICAgICAgICB9CgogICAgICAgIGNvbnRhaW5lciBzbVN5c3RlbSAiQ29udGFpbmVycyIgewogICAgICAgICAgICBpbmNsdWRlIHZpc2l0b3IgYWRtaW4gYmFja2VuZCBkYgogICAgICAgICAgICBhdXRvbGF5b3V0IHRiCiAgICAgICAgICAgIGRlc2NyaXB0aW9uICLlvoznq6/lsIjms6jmqKHlvI/vvJpmcm9udGVuZCBTUEEg5bCa5pyq6Kit6KiI77yM5pqC55yB55Wl77yI5ZyoIEwxIFN5c3RlbUNvbnRleHQg5Lit5L+d55WZ77yJIgogICAgICAgIH0KCiAgICAgICAgY29tcG9uZW50IGJhY2tlbmQgIkJhY2tlbmQtQ29tcG9uZW50cy1TTElDRS0wMDEiIHsKICAgICAgICAgICAgaW5jbHVkZSB2aXNpdG9yIHJlZ2lzdHJhdGlvbkNvbnRyb2xsZXIgcmVnaXN0cmF0aW9uQXBwU2VydmljZSBhY2NvdW50RXhpc3RlbmNlUG9ydCBqcGFBY2NvdW50RXhpc3RlbmNlQWRhcHRlciByZWdpc3RyYXRpb25BcHBSZXBvc2l0b3J5IGpwYVJlZ2lzdHJhdGlvbkFwcGxpY2F0aW9uUmVwb3NpdG9yeSBkYgogICAgICAgICAgICBhdXRvbGF5b3V0IHRiCiAgICAgICAgICAgIGRlc2NyaXB0aW9uICJTTElDRS0wMDHvvIjlh43ntZDvvInvvJrnlKjmiLbmj5Dlh7rluLPmiLboqLvlhornlLPoq4vnmoTlvoznq6/lhYPku7bjgIJMMyDku6UgVmlzaXRvciBhY3RvciDnm7TpgKMgYmFja2VuZO+8jGZyb250ZW5kIFNQQSDnnIHnlaXvvIjoposgTDEvTDLvvInjgILms6jmhI/vvJpBY2NvdW50RXhpc3RlbmNlUG9ydCDnmoQgQWRhcHRlciDlnKggU0xJQ0UtMDAxIOWOn+eCuiBTdHViQWNjb3VudEV4aXN0ZW5jZUFkYXB0ZXLvvIzlt7LmlrwgU0xJQ0UtMDA0IOabv+aPm+eCuiBKcGFBY2NvdW50RXhpc3RlbmNlQWRhcHRlcu+8iFNFQU0tMDAxIOWhq+WFhe+8ieOAgiIKICAgICAgICB9CgogICAgICAgIGNvbXBvbmVudCBiYWNrZW5kICJCYWNrZW5kLUNvbXBvbmVudHMtU0xJQ0UtMDAyIiB7CiAgICAgICAgICAgIGluY2x1ZGUgYWRtaW4gdmlzaXRvciBhZG1pbkF1dGhDb250cm9sbGVyIGFkbWluQXV0aFNlcnZpY2UgYWRtaW5DcmVkZW50aWFsUmVwb3NpdG9yeSBhZG1pbkNyZWRlbnRpYWwganBhQWRtaW5DcmVkZW50aWFsUmVwb3NpdG9yeSBqd3RUb2tlblByb3ZpZGVyIHNlY3VyaXR5Q29uZmlnIHB1YmxpY1BhdGhDb250cmlidXRvciByZWdpc3RyYXRpb25QdWJsaWNQYXRoQ29udHJpYnV0b3IgYWRtaW5QdWJsaWNQYXRoQ29udHJpYnV0b3IgcmVnaXN0cmF0aW9uQ29udHJvbGxlciBkYgogICAgICAgICAgICBhdXRvbGF5b3V0IHRiCiAgICAgICAgICAgIGRlc2NyaXB0aW9uICJTTElDRS0wMDLvvIjlh43ntZDvvInvvJpBZG1pbiDouqvku73pqZforYnvvIhKV1Qg5Z+656SO5bu66Kit77yJ77ybTDMg5LulIEFjdG9yIOebtOmAoyBiYWNrZW5k77yMZnJvbnRlbmQgU1BBIOecgeeVpe+8iOimiyBMMS9MMu+8ieOAgiIKICAgICAgICB9CgogICAgICAgIGNvbXBvbmVudCBiYWNrZW5kICJCYWNrZW5kLUNvbXBvbmVudHMtU0xJQ0UtMDA0IiB7CiAgICAgICAgICAgIGluY2x1ZGUgYWRtaW4gYWRtaW5BcHBsaWNhdGlvbkNvbnRyb2xsZXIgYWRtaW5BcHBsaWNhdGlvblNlcnZpY2UKICAgICAgICAgICAgaW5jbHVkZSBjcmVhdGVBY2NvdW50VXNlQ2FzZSBhY2NvdW50QXBwbGljYXRpb25TZXJ2aWNlIGFjY291bnRFbnRpdHkgYWNjb3VudFJlcG9zaXRvcnkganBhQWNjb3VudFJlcG9zaXRvcnkKICAgICAgICAgICAgaW5jbHVkZSByZXZpZXdBcHBsaWNhdGlvblVzZUNhc2UgcmVnaXN0cmF0aW9uQXBwU2VydmljZSByZWdpc3RyYXRpb25BcHBSZXBvc2l0b3J5IGpwYVJlZ2lzdHJhdGlvbkFwcGxpY2F0aW9uUmVwb3NpdG9yeQogICAgICAgICAgICBpbmNsdWRlIGFjY291bnRFeGlzdGVuY2VQb3J0IGpwYUFjY291bnRFeGlzdGVuY2VBZGFwdGVyCiAgICAgICAgICAgIGluY2x1ZGUgand0VG9rZW5Qcm92aWRlciBzZWN1cml0eUNvbmZpZyBkYgogICAgICAgICAgICBhdXRvbGF5b3V0IHRiCiAgICAgICAgICAgIGRlc2NyaXB0aW9uICJTTElDRS0wMDTvvIjlh43ntZDvvInvvJpBZG1pbiDljZToqr/luLPomZ/lu7rnq4vvvIhERUMtMDIx77yJ77yb5YWp6ZqO5q615YiG6ZuiIHRyYW5zYWN0aW9u77ybIFNFQU0tMDAxIOWhq+WFhe+8iFN0dWIg56e76Zmk77yMSnBhQWNjb3VudEV4aXN0ZW5jZUFkYXB0ZXIg5o6l566h77yJ44CCIgogICAgICAgIH0KCiAgICAgICAgY29tcG9uZW50IGJhY2tlbmQgIkJhY2tlbmQtQ29tcG9uZW50cy1TTElDRS0wMDMiIHsKICAgICAgICAgICAgaW5jbHVkZSBhZG1pbiBhZG1pbkFwcGxpY2F0aW9uQ29udHJvbGxlciBsaXN0UGVuZGluZ0FwcGxpY2F0aW9uc1VzZUNhc2UgcmV2aWV3QXBwbGljYXRpb25Vc2VDYXNlIHJlZ2lzdHJhdGlvbkFwcFNlcnZpY2UgcmVnaXN0cmF0aW9uQXBwUmVwb3NpdG9yeSBqcGFSZWdpc3RyYXRpb25BcHBsaWNhdGlvblJlcG9zaXRvcnkgand0VG9rZW5Qcm92aWRlciBzZWN1cml0eUNvbmZpZyBkYgogICAgICAgICAgICBhdXRvbGF5b3V0IHRiCiAgICAgICAgICAgIGRlc2NyaXB0aW9uICJTTElDRS0wMDPvvIjlh43ntZDvvInvvJpBZG1pbiDlr6nmoLjnlLPoq4vvvJvoloQgUG9ydGFsIOaooeW8j++8iERFQy0wMTnvvInigJQgQWRtaW5BcHBsaWNhdGlvbkNvbnRyb2xsZXIg5aeU5rS+6IezIHJlZ2lzdHJhdGlvbiDmqKHntYQgVXNlQ2FzZe+8m0wzIOS7pSBBZG1pbiBhY3RvciDnm7TpgKMgYmFja2VuZOOAgiIKICAgICAgICB9CgogICAgICAgIGNvbXBvbmVudCBiYWNrZW5kICJCYWNrZW5kLUNvbXBvbmVudHMiIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9sYXlvdXQgdGIKICAgICAgICAgICAgZGVzY3JpcHRpb24gIue0r+epjeWFqOiyjO+8mumaqOavj+WAiyBTTElDRSDlrozmiJDlvozmm7TmlrDvvIzmsLjpgaDlj43mmKDnlbbliY3miYDmnInlt7Llr6bkvZzlhYPku7bvvIhERUMtMDE377yJIgogICAgICAgIH0KCiAgICAgICAgc3R5bGVzIHsKICAgICAgICAgICAgZWxlbWVudCAiUGVyc29uIiB7CiAgICAgICAgICAgICAgICBzaGFwZSBQZXJzb24KICAgICAgICAgICAgICAgIGJhY2tncm91bmQgIzA4NDI3YgogICAgICAgICAgICAgICAgY29sb3IgI2ZmZmZmZgogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkZyb250ZW5kIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICM0MzhkZDUKICAgICAgICAgICAgICAgIGNvbG9yICNmZmZmZmYKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJCYWNrZW5kIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICMyZDYwOTkKICAgICAgICAgICAgICAgIGNvbG9yICNmZmZmZmYKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJEYXRhYmFzZSIgewogICAgICAgICAgICAgICAgc2hhcGUgQ3lsaW5kZXIKICAgICAgICAgICAgICAgIGJhY2tncm91bmQgIzQzOGRkNQogICAgICAgICAgICAgICAgY29sb3IgI2ZmZmZmZgogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIlByZXNlbnRhdGlvbiIgewogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjYjBjNGRlCiAgICAgICAgICAgICAgICBjb2xvciAjMDAwMDAwCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiQXBwbGljYXRpb24iIHsKICAgICAgICAgICAgICAgIGJhY2tncm91bmQgI2ZmZjhlNgogICAgICAgICAgICAgICAgY29sb3IgIzAwMDAwMAogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkluZnJhc3RydWN0dXJlIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICNkNGVkZGEKICAgICAgICAgICAgICAgIGNvbG9yICMwMDAwMDAKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJTRUFNIiB7CiAgICAgICAgICAgICAgICBib3JkZXIgRGFzaGVkCiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICNmOWYwZmYKICAgICAgICAgICAgICAgIGNvbG9yICMwMDAwMDAKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJTdHViIiB7CiAgICAgICAgICAgICAgICBib3JkZXIgRGFzaGVkCiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICNmZmYzY2QKICAgICAgICAgICAgICAgIGNvbG9yICM4NTY0MDQKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50ICJFeHRlbnNpb25Qb2ludCIgewogICAgICAgICAgICAgICAgYm9yZGVyIERhc2hlZAogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjY2ZlMmZmCiAgICAgICAgICAgICAgICBjb2xvciAjMDg0Mjk4CiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiQWRhcHRlciIgewogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjZDFlN2RkCiAgICAgICAgICAgICAgICBjb2xvciAjMGEzNjIyCiAgICAgICAgICAgIH0KICAgICAgICAgICAgZWxlbWVudCAiUHVibGljRW5kcG9pbnQiIHsKICAgICAgICAgICAgICAgIGJhY2tncm91bmQgI2ZmZThlOAogICAgICAgICAgICAgICAgY29sb3IgIzAwMDAwMAogICAgICAgICAgICB9CgogICAgICAgICAgICAvLyDilIDilIAgTW9kdWxlIGdyb3VwIGJvdW5kYXJ5IHN0eWxlcyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKICAgICAgICAgICAgZWxlbWVudCAiR3JvdXA6cmVnaXN0cmF0aW9uIOaooee1hCIgewogICAgICAgICAgICAgICAgY29sb3IgIzJkNmUyZAogICAgICAgICAgICAgICAgc3Ryb2tlV2lkdGggMwogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkdyb3VwOnNlY3VyaXR5IOaooee1hCIgewogICAgICAgICAgICAgICAgY29sb3IgIzFhNGE3YQogICAgICAgICAgICAgICAgc3Ryb2tlV2lkdGggMwogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkdyb3VwOmFkbWluIOaooee1hCIgewogICAgICAgICAgICAgICAgY29sb3IgIzhhNjIwMAogICAgICAgICAgICAgICAgc3Ryb2tlV2lkdGggMwogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgIkdyb3VwOmFjY291bnQg5qih57WEIiB7CiAgICAgICAgICAgICAgICBjb2xvciAjMmE0YThhCiAgICAgICAgICAgICAgICBzdHJva2VXaWR0aCAzCiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICB9Cn0=",
+    "structurizr.inspection.info" : "0",
+    "structurizr.inspection.ignore" : "0",
+    "structurizr.inspection.warning" : "0"
+  },
+  "views" : {
+    "componentViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "6",
+      "description" : "SLICE-001（凍結）：用戶提出帳戶註冊申請的後端元件。L3 以 Visitor actor 直連 backend，frontend SPA 省略（見 L1/L2）。注意：AccountExistencePort 的 Adapter 在 SLICE-001 原為 StubAccountExistenceAdapter，已於 SLICE-004 替換為 JpaAccountExistenceAdapter（SEAM-001 填充）。",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "30",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "32",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "Backend-Components-SLICE-001",
+      "name" : "Component View: SM-T1 System - Backend",
+      "order" : 3,
+      "relationships" : [ {
+        "id" : "40"
+      }, {
+        "id" : "42"
+      }, {
+        "id" : "43"
+      }, {
+        "id" : "44"
+      }, {
+        "id" : "59"
+      }, {
+        "id" : "66"
+      }, {
+        "id" : "67"
+      }, {
+        "id" : "71"
+      }, {
+        "id" : "72"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "6",
+      "description" : "SLICE-002（凍結）：Admin 身份驗證（JWT 基礎建設）；L3 以 Actor 直連 backend，frontend SPA 省略（見 L1/L2）。",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "14",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "15",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "18",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "19",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "20",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "21",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "24",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "25",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "32",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "Backend-Components-SLICE-002",
+      "name" : "Component View: SM-T1 System - Backend",
+      "order" : 4,
+      "relationships" : [ {
+        "id" : "40"
+      }, {
+        "id" : "45"
+      }, {
+        "id" : "48"
+      }, {
+        "id" : "49"
+      }, {
+        "id" : "50"
+      }, {
+        "id" : "51"
+      }, {
+        "id" : "52"
+      }, {
+        "id" : "53"
+      }, {
+        "id" : "73"
+      }, {
+        "id" : "74"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "6",
+      "description" : "SLICE-004（凍結）：Admin 協調帳號建立（DEC-021）；兩階段分離 transaction； SEAM-001 填充（Stub 移除，JpaAccountExistenceAdapter 接管）。",
+      "elements" : [ {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "22",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "23",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "26",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "27",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "28",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "29",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "30",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "31",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "32",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "Backend-Components-SLICE-004",
+      "name" : "Component View: SM-T1 System - Backend",
+      "order" : 5,
+      "relationships" : [ {
+        "id" : "43"
+      }, {
+        "id" : "44"
+      }, {
+        "id" : "54"
+      }, {
+        "id" : "56"
+      }, {
+        "id" : "58"
+      }, {
+        "id" : "59"
+      }, {
+        "id" : "60"
+      }, {
+        "id" : "61"
+      }, {
+        "id" : "62"
+      }, {
+        "id" : "63"
+      }, {
+        "id" : "64"
+      }, {
+        "id" : "65"
+      }, {
+        "id" : "66"
+      }, {
+        "id" : "67"
+      }, {
+        "id" : "69"
+      }, {
+        "id" : "70"
+      }, {
+        "id" : "71"
+      }, {
+        "id" : "72"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "6",
+      "description" : "SLICE-003（凍結）：Admin 審核申請；薄 Portal 模式（DEC-019）— AdminApplicationController 委派至 registration 模組 UseCase；L3 以 Admin actor 直連 backend。",
+      "elements" : [ {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "11",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "22",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "32",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "Backend-Components-SLICE-003",
+      "name" : "Component View: SM-T1 System - Backend",
+      "order" : 6,
+      "relationships" : [ {
+        "id" : "44"
+      }, {
+        "id" : "54"
+      }, {
+        "id" : "55"
+      }, {
+        "id" : "56"
+      }, {
+        "id" : "57"
+      }, {
+        "id" : "58"
+      }, {
+        "id" : "59"
+      }, {
+        "id" : "71"
+      }, {
+        "id" : "72"
+      } ]
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "6",
+      "description" : "累積全貌：隨每個 SLICE 完成後更新，永遠反映當前所有已實作元件（DEC-017）",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "4",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "11",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "14",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "15",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "18",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "19",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "20",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "21",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "22",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "23",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "24",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "25",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "26",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "27",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "28",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "29",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "30",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "31",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "32",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "Backend-Components",
+      "name" : "Component View: SM-T1 System - Backend",
+      "order" : 7,
+      "relationships" : [ {
+        "id" : "34"
+      }, {
+        "id" : "38"
+      }, {
+        "id" : "40"
+      }, {
+        "id" : "42"
+      }, {
+        "id" : "43"
+      }, {
+        "id" : "44"
+      }, {
+        "id" : "45"
+      }, {
+        "id" : "48"
+      }, {
+        "id" : "49"
+      }, {
+        "id" : "50"
+      }, {
+        "id" : "51"
+      }, {
+        "id" : "52"
+      }, {
+        "id" : "53"
+      }, {
+        "id" : "54"
+      }, {
+        "id" : "55"
+      }, {
+        "id" : "56"
+      }, {
+        "id" : "57"
+      }, {
+        "id" : "58"
+      }, {
+        "id" : "59"
+      }, {
+        "id" : "60"
+      }, {
+        "id" : "61"
+      }, {
+        "id" : "62"
+      }, {
+        "id" : "63"
+      }, {
+        "id" : "64"
+      }, {
+        "id" : "65"
+      }, {
+        "id" : "66"
+      }, {
+        "id" : "67"
+      }, {
+        "id" : "69"
+      }, {
+        "id" : "70"
+      }, {
+        "id" : "71"
+      }, {
+        "id" : "72"
+      }, {
+        "id" : "73"
+      }, {
+        "id" : "74"
+      } ]
+    } ],
+    "configuration" : {
+      "styles" : {
+        "elements" : [ {
+          "background" : "#d1e7dd",
+          "color" : "#0a3622",
+          "tag" : "Adapter"
+        }, {
+          "background" : "#fff8e6",
+          "color" : "#000000",
+          "tag" : "Application"
+        }, {
+          "background" : "#2d6099",
+          "color" : "#ffffff",
+          "tag" : "Backend"
+        }, {
+          "background" : "#438dd5",
+          "color" : "#ffffff",
+          "shape" : "Cylinder",
+          "tag" : "Database"
+        }, {
+          "background" : "#cfe2ff",
+          "border" : "Dashed",
+          "color" : "#084298",
+          "tag" : "ExtensionPoint"
+        }, {
+          "background" : "#438dd5",
+          "color" : "#ffffff",
+          "tag" : "Frontend"
+        }, {
+          "color" : "#2a4a8a",
+          "strokeWidth" : 3,
+          "tag" : "Group:account 模組"
+        }, {
+          "color" : "#8a6200",
+          "strokeWidth" : 3,
+          "tag" : "Group:admin 模組"
+        }, {
+          "color" : "#2d6e2d",
+          "strokeWidth" : 3,
+          "tag" : "Group:registration 模組"
+        }, {
+          "color" : "#1a4a7a",
+          "strokeWidth" : 3,
+          "tag" : "Group:security 模組"
+        }, {
+          "background" : "#d4edda",
+          "color" : "#000000",
+          "tag" : "Infrastructure"
+        }, {
+          "background" : "#08427b",
+          "color" : "#ffffff",
+          "shape" : "Person",
+          "tag" : "Person"
+        }, {
+          "background" : "#b0c4de",
+          "color" : "#000000",
+          "tag" : "Presentation"
+        }, {
+          "background" : "#ffe8e8",
+          "color" : "#000000",
+          "tag" : "PublicEndpoint"
+        }, {
+          "background" : "#f9f0ff",
+          "border" : "Dashed",
+          "color" : "#000000",
+          "tag" : "SEAM"
+        }, {
+          "background" : "#fff3cd",
+          "border" : "Dashed",
+          "color" : "#856404",
+          "tag" : "Stub"
+        } ]
+      },
+      "terminology" : { }
+    },
+    "containerViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "description" : "後端專注模式：frontend SPA 尚未設計，暂省略（在 L1 SystemContext 中保留）",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "32",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalSoftwareSystemBoundariesVisible" : false,
+      "key" : "Containers",
+      "name" : "Container View: SM-T1 System",
+      "order" : 2,
+      "relationships" : [ {
+        "id" : "41"
+      }, {
+        "id" : "46"
+      }, {
+        "id" : "68"
+      } ],
+      "softwareSystemId" : "3"
+    } ],
+    "systemContextViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "enterpriseBoundaryVisible" : true,
+      "key" : "SystemContext",
+      "name" : "System Context View: SM-T1 System",
+      "order" : 1,
+      "relationships" : [ {
+        "id" : "35"
+      }, {
+        "id" : "47"
+      } ],
+      "softwareSystemId" : "3"
+    } ]
+  }
+}
