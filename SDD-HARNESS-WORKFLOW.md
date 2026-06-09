@@ -187,19 +187,26 @@ Production code 的形狀由以下約束共同決定：
 - 掃描 test code 中的 `ac###_...` / `inv###_...`。
 - 回報 missing / orphan / disabled。
 
-第一版不需要 Java AST。ripgrep、shell、Python 任一即可。
+第一版不需要 Java AST；它只需要驗證 spec id 與 test id 的可追溯性。
 
-可能命令：
-
-```bash
-scripts/check-spec-test-trace.sh
-```
-
-或：
+決策後命令形狀：
 
 ```bash
-tools/sddh/check_trace.py
+python3 tools/sddh/check_trace.py
 ```
+
+決策：Trace Checker v0 採 Python standard library first。
+
+理由：本專案預期以 GitHub / Codespaces 類雲端開發為主要驗證場景，Python runtime 成本低於本機多人環境；同時 SDD Harness 的目標已不只是一次性 grep，而是逐步形成可重跑、可比較、可輸出給 AI closeout audit 使用的監督與評測工具。
+
+工具選型不要只看「最少 runtime」，而要看 SDD Harness 是否準備把 trace check 固化成長期可重複的工程工具：
+
+- 如果只需要一次性 baseline 或人工輔助，shell + ripgrep 足夠。
+- 如果需要 structured report、JSON output、baseline diff、CI annotation，Python 的優勢會快速變大。
+- 如果希望完全留在 Java ecosystem，可以改成 JUnit governance test；但這會把 repo governance 檢查放進 backend test lifecycle，語意上未必乾淨。
+- AI 適合做語意審查與例外判讀，不適合取代 deterministic id coverage check。
+
+Trace Checker v0 仍需保持極簡：不引入第三方 dependency、不建立完整 Python package、不做 Java AST parser、不做 plugin system、不自動修復 spec 或 test。
 
 ### 5.3 Architecture Check Runner
 
@@ -235,6 +242,170 @@ Agent 適合平行獨立稽核，例如：
 
 但目前 workflow 還在設計期。過早導入 agent 會增加不可控變數。
 
+### 5.6 Tool runtime 選擇：shell、Python、Java/JUnit、AI 的分工
+
+此選擇本身是一個 SDD Harness 設計點，不能只用「環境準備最少」或「未來功能最多」單一標準決定。
+
+#### 5.6.1 哪些檢查適合固化成 tool？
+
+適合 tool 化的是 deterministic、可重跑、判準明確的檢查：
+
+- `AC-###` / `INV-###` 是否存在於 spec。
+- `ac###_...` / `inv###_...` 是否存在於 test method。
+- missing / orphan / disabled 分類。
+- baseline diff。
+- JSON / machine-readable report。
+- CI annotation。
+- module / package naming convention 的機械檢查。
+
+這些檢查若交給 AI，每次輸出格式、漏報風險、判準穩定性都較難控管；而且它們不需要語意理解，使用 AI 反而浪費。
+
+#### 5.6.2 哪些檢查適合 AI？
+
+適合 AI 的是 semantic、需要脈絡、需要設計判斷的稽核：
+
+- AC test 描述是否真的符合 SLICE 的 Given / When / Then 語意。
+- 新增 UseCase 是否放在正確 module ownership 下。
+- Architecture artifact 是否以正確抽象層級呈現，不過度畫 internal class。
+- DEC 是否記錄了足夠的假設、取捨與反證條件。
+- `SYSTEM-CAPABILITIES.md` 與實作決策之間是否存在張力。
+
+這類檢查不適合過早寫成 parser，應先用 prompt / closeout audit checklist 累積幾次案例，再決定是否值得工具化。
+
+#### 5.6.3 Python 的真正優勢
+
+若 SDD Harness 未來需要以下功能，Python 有明顯優勢：
+
+- structured report：可以穩定輸出 grouped sections 與 exit code。
+- JSON output：方便給 CI、dashboard、AI closeout prompt 當輸入。
+- baseline diff：容易保存 snapshot 並比較新增 / 修復 / 既有 debt。
+- orphan / missing / disabled 分類：比 shell 更容易維護規則與測試。
+- multi-file parsing：可逐步擴充 markdown、Java test source、package-info、LikeC4 model 的輕量 parser。
+- CI annotations：可依 GitHub Actions / GitLab 格式輸出行號與 warning。
+
+因此 Python 不是因為第一版 trace check 必須使用才引入，而是因為「Harness 若要成為可重複 workflow 工具」時，它能降低後續演化成本。
+
+#### 5.6.4 Python 的代價與反證
+
+Python 的代價：
+
+- 新增 runtime prerequisite。
+- 需要決定 Python 版本與安裝方式。
+- 可能需要 `pyproject.toml`、lockfile 或 formatting/linting 規範。
+- 若只做簡單 grep，會顯得過度設計。
+
+反證條件：如果 SDD Harness 在 2～3 個 SLICE 後仍只需要「列出 missing / orphan / disabled」且不需要 JSON、baseline、CI annotation，那就不應引入 Python；shell + ripgrep 或 Java/JUnit 足夠。
+
+#### 5.6.5 決策：Python standard library first
+
+目前決策：Trace Checker v0 採 Python standard library first，而不是 shell first。
+
+決策依據：
+
+- 本專案預期在 GitHub / Codespaces 類雲端開發環境中驗證 SDD Harness，Python runtime 的環境成本可被集中管理。
+- SDD Harness 的目標是建立方法論監督與評測工具，不只是一次性 grep。
+- 後續很可能需要 structured report、JSON output、baseline diff 與 CI annotation。
+- Python 可以產生 deterministic report，再交給 AI 做 semantic closeout audit，符合 tool / AI 分工。
+- Python 僅作為 repo governance / SDD Harness runtime，不進入 backend production runtime。
+
+限制：
+
+- 初版只使用 Python standard library。
+- 不新增 `requirements.txt`、`pyproject.toml`、lockfile 或第三方套件。
+- 不建立完整 CLI framework。
+- 不解析 Java AST。
+- 不做自動修復。
+
+反證條件：如果 2～3 個 SLICE 後，Trace Checker 仍只需要列出 missing / orphan / disabled，且沒有 JSON、baseline 或 CI 需求，則應重新評估是否退回 shell + ripgrep 或保留 Python 但不再擴張。
+
+#### 5.6.6 可攜性附註：方法論擴散後 Python 不應成為唯一入口
+
+本階段採 Python standard library first，是為了在 GitHub / Codespaces 類雲端開發環境中快速驗證 SDD Harness 方法論，並建立一個強力、可重跑的監督與評測工具。
+
+但當方法論確定並擴散到非 GitHub 雲端環境時，Python 工具不應被理解為唯一可接受的落地形式。屆時應區分兩層：
+
+- **Methodology contract**：Spec ↔ AC test、INV ↔ UT、architecture boundary、artifact drift 這些檢查語意與 fail / warning policy 必須保留。
+- **Execution adapter**：Python、shell、Java/JUnit governance test、CI job、IDE task、或 AI prompt 都只是把 methodology contract 落地的執行載具。
+
+因此，未來非 Codespaces 環境可以採取以下策略：
+
+- Python 可維持為 reference implementation，提供最完整的 deterministic report / JSON / baseline 能力。
+- 對 Python runtime 不友善的環境，可提供 shell wrapper、Java/JUnit governance test，或只使用 AI-assisted closeout prompt 作為降級輔助。
+- 若某些團隊已有成熟 CI / build ecosystem，應優先把 SDD Harness 檢查接進既有 pipeline，而不是強迫所有環境安裝 Python。
+- AI prompt 可輔助 semantic audit 與例外判讀，但不應取代可重跑的 deterministic checks；若無法執行工具，AI prompt 應明確標示為 degraded mode。
+
+補充建議：後續工具文件應把 `tools/sddh/check_trace.py` 定義為「目前 repo 的 reference checker」，而不是把 Python 寫成 SDD Harness 方法論的一部分。這樣可以同時保留本階段的工具化效率，也避免方法論成熟後被單一 runtime 綁死。
+
+### 5.7 Architecture notation 選擇：Structurizr DSL 與 LikeC4 的定位
+
+目前 `architecture/workspace.dsl` 是既有累積式 SOT；LikeC4 則是後期研究方向。這裡的選擇不只是語法偏好，而是 SDD Harness 的 architecture artifact layer 要支援哪種工作流。
+
+#### 5.7.1 選 LikeC4 的吸引力
+
+LikeC4 的主要優勢：
+
+- 環境準備較輕：不需要啟動 Structurizr image 才能看圖或互動。
+- 語意較彈性：本專案不需要嚴格、正統 C4，只是借用分層視角呈現 system / container / module / usecase / port / adapter。
+- 更貼近 Modulith：可以直接使用 `module` 這類 element kind，避免把 Spring Modulith module 勉強翻譯成 C4 component。
+- 適合 AI audit：模型文字更接近 code-side module topology，較容易讓 AI 對照 `package-info.java`、root public API、Port / Adapter。
+- local feedback loop 較短：若開發者能更容易開啟、修改、檢視架構圖，就更可能在每個 SLICE 真的維護它。
+
+這些優勢符合 SDD Harness 的目標：架構圖不是文件裝飾，而是 AI coding 前後都會被使用的 workflow artifact。
+
+#### 5.7.2 Structurizr DSL 的優勢
+
+Structurizr DSL 的主要價值：
+
+- 決策歷史已經累積在 `workspace.dsl`。
+- C4 vocabulary 較成熟，適合對外溝通 system / container / component view。
+- 既有 DEC 已把 workspace 定位為累積式 SOT，貿然切換會造成歷史斷裂。
+- 若需要比較正式的 architecture governance，Structurizr 的生態與概念較穩定。
+
+因此不應只因 LikeC4 開發體驗較好，就立刻宣告 Structurizr 失效。
+
+#### 5.7.3 弱點與斷層
+
+LikeC4 的弱點：
+
+- 若 team 不熟 LikeC4，模型語意可能比 C4 更自由，導致命名與抽象層級失控。
+- 自訂 element kind 雖彈性高，但也可能降低與標準 C4 工具 / 文件的互通性。
+- 若 LikeC4 長期停留在 sandbox，而 `workspace.dsl` 同時繼續存在，會形成雙 SOT 漂移。
+- AI 可能因 LikeC4 model 太貼近 code topology，而忽略 C4 原本服務 stakeholder 溝通的高層視角。
+
+Structurizr DSL 的弱點：
+
+- 本地環境較重，若需要 image / service 才能順利檢視，會降低每次 SLICE 更新架構圖的意願。
+- C4 component vocabulary 與 Spring Modulith module 存在語意摩擦。
+- 若專案實際目的不是正統 C4，而是 module topology + port / adapter 視覺化，Structurizr 可能顯得過度正式。
+
+主要斷層：如果 `workspace.dsl` 是名義 SOT，但實務上大家只維護 LikeC4，名義 SOT 會快速失真；反過來，如果 LikeC4 只是 sandbox，卻被 AI 當成最新架構依據，也會造成錯誤推導。
+
+#### 5.7.4 反證條件
+
+選 LikeC4 作為 active architecture model 的反證條件：
+
+- 新增 module / Port / Adapter 後，LikeC4 比 `workspace.dsl` 更容易遺漏或誤畫。
+- LikeC4 的彈性導致每個 SLICE 抽象層級不同，無法形成穩定規範。
+- closeout audit 無法從 LikeC4 穩定判斷 module relationship、public API、SEAM 狀態。
+- 對外溝通仍大量依賴 C4/Structurizr，而 LikeC4 只服務開發者局部視角。
+
+保留 Structurizr 作為唯一 SOT 的反證條件：
+
+- 每次更新架構都因 image / tooling 太重而延遲或被跳過。
+- AI / developer 實作時主要依賴 LikeC4，`workspace.dsl` 只在 retrospect 才補，造成實質漂移。
+- Modulith module、port、adapter 的語意在 Structurizr 中需要大量註解才能避免誤解。
+
+#### 5.7.5 暫定策略
+
+短期不做一次性遷移。建議採「明確雙軌，單一 active」策略：
+
+- `package-info.java` 是 code-side module contract。
+- `architecture/workspace.dsl` 保持 legacy / formal architecture SOT，直到正式決策變更。
+- `likec4-sandbox/architecture.c4` 可作為 candidate active model，用來驗證更輕的 local workflow 與 module topology 表達。
+- 下一個涉及架構變更的 SLICE 可要求同時更新兩者一次，並在 retrospect 評估哪個更能支撐 SDD Harness。
+
+若 LikeC4 在下一個 SLICE 中展現更低維護成本與更低漂移風險，應新增 DEC，明確把 active architecture SOT 從 Structurizr workspace 遷移到 LikeC4；否則維持現狀。
+
 ---
 
 ## 6. 分階段落地建議
@@ -262,21 +433,26 @@ SDD-HARNESS-TRACE-RULES.md
 
 或合併進本文件。
 
-### Phase 2：實作 Trace Checker
+### Phase 2：實作 Trace Checker v0
 
-目標：最小自動化。
+目標：用極簡 Python 工具把 Spec ↔ Test trace 變成可重跑的 deterministic check。
 
 輸出：
 
 ```text
-scripts/check-spec-test-trace.sh
-```
-
-或：
-
-```text
 tools/sddh/check_trace.py
 ```
+
+第一步展開內容：
+
+1. 掃描 repo root 的 `SLICE-*.md`，收集 `AC-###` 與 `INV-###`，並記錄來源檔案與行號。
+2. 掃描 `backend/src/test/java/**/*.java`，收集 test method name 中的 `ac###` 與 `inv###`。
+3. 偵測 AC / INV test method 附近或方法宣告前的 `@Disabled`。
+4. 產生 human-readable text report，分類列出 missing / orphan / disabled。
+5. 提供 `--format json`，讓後續 AI closeout audit、baseline diff 或 CI 可以消費 deterministic report。
+6. 採歷史豁免模式：v0 先把既有 disabled 視為 warning；baseline 機制完成後，新增 disabled 才升級為 fail。
+
+v0 不做：Java AST parser、semantic Given / When / Then 判斷、architecture model parser、自動修復、第三方套件。
 
 ### Phase 3：定義 Architecture Harness
 
@@ -370,9 +546,9 @@ closeout-audit.prompt.md
 
 - `package-info.java` = code-side module contract。
 - `architecture/workspace.dsl` = 目前正式凍結 SOT。
-- `likec4-sandbox/architecture.c4` = 研究 / audit candidate。
+- `likec4-sandbox/architecture.c4` = 研究 / audit candidate，可在下一個架構變更 SLICE 驗證是否升格。
 
-待確認：是否要把 LikeC4 升格為 active architecture SOT？
+待確認：是否要把 LikeC4 升格為 active architecture SOT？若升格，需要補 DEC 說明遷移理由、雙軌過渡期與反證條件。
 
 ### Q2. `@Disabled` 的 AC / INV test 如何處理
 
@@ -398,11 +574,25 @@ closeout-audit.prompt.md
 
 ### Q4. 第一個落地成果
 
-建議先做文件，再做 script：
+已更新：第一個落地成果是 Trace Checker v0，而不是再停留在文件整理。
 
-1. 完成本文件與 trace rules。
-2. 再做 `check-spec-test-trace`。
-3. 再包 closeout audit prompt。
+展開順序：
+
+1. 實作 `tools/sddh/check_trace.py`。
+2. 對現有 `SLICE-*.md` 與 `backend/src/test/java/**/*.java` 跑 baseline。
+3. 先只回報 missing / orphan / disabled，不修正歷史 debt。
+4. 將 deterministic report 作為下一輪 AI closeout audit 的輸入。
+5. Trace Checker v0 驗證後，再整理 closeout audit prompt。
+
+### Q5. Trace Checker 是否引入 Python
+
+已決策：引入 Python 作為 Trace Checker v0 的 repo-level tool runtime，但限用 standard library。
+
+決策原因：本專案以 GitHub / Codespaces 類雲端開發驗證 SDD Harness，且工具目標已從一次性 grep baseline 推進到方法論監督與評測工具；近期需要保留 structured report、JSON output、baseline diff、CI annotation 的演化空間。
+
+保留反證：若 2～3 個 SLICE 後仍沒有 JSON / baseline / CI 需求，或 Python runtime 在實際 Codespaces / CI 中造成摩擦，則重新評估工具 runtime。
+
+可攜性附註：Python 是本 repo / cloud-dev 驗證階段的 reference checker runtime，不是 SDD Harness 方法論本身。方法論擴散到非 GitHub 雲端環境後，可用 shell、Java/JUnit、CI adapter 或 AI prompt 作為降級或替代執行載具，但必須保留相同的 traceability contract 與 fail / warning policy。
 
 ---
 
